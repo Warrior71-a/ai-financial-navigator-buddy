@@ -1,5 +1,17 @@
 // Core financial data types for the personal finance dashboard
 
+export type IncomeFrequency = 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly' | 'one-time';
+
+export interface Income {
+  id: string;
+  source: string;
+  amount: number;
+  frequency: IncomeFrequency;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface User {
   id: string;
   name: string;
