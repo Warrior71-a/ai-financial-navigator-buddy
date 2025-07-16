@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { FinancialAIAdvisor } from "@/components/FinancialAIAdvisor";
+import { SpendingAnalytics } from "@/components/SpendingAnalytics";
+import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
+import { SmartAlerts } from "@/components/SmartAlerts";
+import { FinancialHealthScore } from "@/components/FinancialHealthScore";
 
 const Index = () => {
   // Mock data - in a real app this would come from your data store
@@ -227,6 +231,43 @@ const Index = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI & Analytics Section */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Financial Health Score */}
+          <FinancialHealthScore 
+            monthlyIncome={financialData.totalIncome}
+            monthlyExpenses={financialData.totalExpenses}
+            totalDebt={financialData.totalDebt}
+            emergencyFund={financialData.emergencyFund}
+            creditUtilization={financialData.creditUtilization}
+            debtPayments={financialData.monthlyPayments}
+          />
+
+          {/* Smart Alerts */}
+          <SmartAlerts 
+            monthlyIncome={financialData.totalIncome}
+            monthlyExpenses={financialData.totalExpenses}
+            totalDebt={financialData.totalDebt}
+            emergencyFund={financialData.emergencyFund}
+            creditUtilization={financialData.creditUtilization}
+          />
+
+          {/* Spending Analytics */}
+          <SpendingAnalytics 
+            totalExpenses={financialData.totalExpenses}
+            monthlyIncome={financialData.totalIncome}
+          />
+
+          {/* Predictive Analytics */}
+          <PredictiveAnalytics 
+            monthlyIncome={financialData.totalIncome}
+            monthlyExpenses={financialData.totalExpenses}
+            totalDebt={financialData.totalDebt}
+            debtPayments={financialData.monthlyPayments}
+            emergencyFund={financialData.emergencyFund}
+          />
+        </div>
 
         {/* AI Financial Advisor */}
         <FinancialAIAdvisor financialData={financialData} />
