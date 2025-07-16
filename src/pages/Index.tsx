@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { FinancialAIAdvisor } from "@/components/FinancialAIAdvisor";
 
 const Index = () => {
   // Mock data - in a real app this would come from your data store
@@ -226,6 +227,9 @@ const Index = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Financial Advisor */}
+        <FinancialAIAdvisor financialData={financialData} />
 
         {/* Financial Health Tips */}
         <Card>
