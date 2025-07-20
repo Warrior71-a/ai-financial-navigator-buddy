@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle, Share2, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFinance } from "@/contexts/FinanceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,21 +15,35 @@ import { FinancialHealthScore } from "@/components/FinancialHealthScore";
 
 const Index = () => {
   const { signOut, user } = useAuth();
+  const { state, getTotalIncome, getTotalExpenses, getNetCashFlow } = useFinance();
   
-  // Real financial data - starts empty until user adds their information
-  const [financialData] = useState({
-    totalIncome: 0,
-    totalExpenses: 0,
-    totalDebt: 0,
-    totalCreditLimit: 0,
-    creditUtilization: 0,
-    netWorth: 0,
-    monthlyPayments: 0,
-    emergencyFund: 0,
-    emergencyFundGoal: 0,
-  });
+  // Calculate financial data from context
+  const financialData = useMemo(() => ({
+    totalIncome: getTotalIncome(),
+    totalExpenses: getTotalExpenses(),
+    totalDebt: 0, // TODO: Add debt tracking
+    totalCreditLimit: 0, // TODO: Add credit tracking
+    creditUtilization: 0, // TODO: Add credit utilization tracking
+    netWorth: getTotalIncome() - getTotalExpenses(), // Simplified calculation
+    monthlyPayments: 0, // TODO: Add loan payments tracking
+    emergencyFund: 0, // TODO: Add emergency fund tracking
+    emergencyFundGoal: getTotalIncome() * 3, // 3 months of income as goal
+  }), [getTotalIncome, getTotalExpenses]);
 
-  const recentTransactions: Array<{id: number, type: string, description: string, amount: number, date: string}> = [];
+  // Get recent transactions (last 5)
+  const recentTransactions = useMemo(() => 
+    state.transactions
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+      .map(t => ({
+        id: t.id,
+        type: t.type,
+        description: t.description,
+        amount: t.type === 'income' ? t.amount : -t.amount,
+        date: new Date(t.date).toLocaleDateString()
+      })), 
+    [state.transactions]
+  );
 
   const quickActions = [
     { title: "Add Income", icon: TrendingUp, color: "bg-green-500", link: "/income" },
