@@ -9,7 +9,8 @@ import {
   CreditCard, 
   Banknote, 
   Camera,
-  ArrowLeft 
+  Target,
+  ArrowLeft
 } from "lucide-react";
 
 const Navigation = () => {
@@ -69,6 +70,14 @@ const Navigation = () => {
       path: "/financial-snapshot",
       color: "text-cyan-400",
       borderColor: "border-l-cyan-500"
+    },
+    {
+      title: "Goal Tracking",
+      description: "Track progress toward financial goals",
+      icon: Target,
+      path: "/goal-tracking",
+      color: "text-indigo-400",
+      borderColor: "border-l-indigo-500"
     }
   ];
 
