@@ -196,6 +196,13 @@ const Index = () => {
                 </Link>
               ))}
             </div>
+            <div className="mt-4 text-center">
+              <Link to="/navigation">
+                <Button variant="outline" className="w-full md:w-auto">
+                  Browse All Features
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
 

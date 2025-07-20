@@ -9,6 +9,7 @@ import Expenses from "./pages/Expenses";
 import CreditCards from "./pages/CreditCards";
 import Loans from "./pages/Loans";
 import BudgetPlanner from "./pages/BudgetPlanner";
+import Navigation from "./pages/Navigation";
 import FinancialSnapshot from "./pages/FinancialSnapshot";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/loans" element={<Loans />} />
           <Route path="/budget-planner" element={<BudgetPlanner />} />
           <Route path="/financial-snapshot" element={<FinancialSnapshot />} />
+          <Route path="/navigation" element={<Navigation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
