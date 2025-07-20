@@ -203,37 +203,44 @@ const BudgetPlanner = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-green-200 bg-green-50/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Total Annual Income</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-900">{formatCurrency(totalAnnualIncome)}</div>
+          <Card className="bg-gradient-to-br from-green-900 to-green-800 border-green-700 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-100 opacity-90">Total Income</p>
+                  <p className="text-3xl font-bold text-white">
+                    {formatCurrency(totalAnnualIncome)}
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-300" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-red-200 bg-red-50/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">Total Annual Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-900">{formatCurrency(totalAnnualExpenses)}</div>
+          <Card className="bg-gradient-to-br from-red-900 to-red-800 border-red-700 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-red-100 opacity-90">Total Expenses</p>
+                  <p className="text-3xl font-bold text-white">
+                    {formatCurrency(totalAnnualExpenses)}
+                  </p>
+                </div>
+                <TrendingDown className="h-8 w-8 text-red-300" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-cyan-200 bg-cyan-50/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-cyan-700">Net Savings</CardTitle>
-              <DollarSign className="h-4 w-4 text-cyan-600" />
-            </CardHeader>
-            <CardContent>
-              <div className={cn(
-                "text-2xl font-bold",
-                netSavings >= 0 ? "text-cyan-900" : "text-red-900"
-              )}>
-                {formatCurrency(netSavings)}
+          <Card className="bg-gradient-to-br from-cyan-900 to-cyan-800 border-cyan-700 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-cyan-100 opacity-90">Net Savings</p>
+                  <p className={`text-3xl font-bold ${netSavings >= 0 ? 'text-white' : 'text-red-300'}`}>
+                    {formatCurrency(netSavings)}
+                  </p>
+                </div>
+                <DollarSign className="h-8 w-8 text-cyan-300" />
               </div>
             </CardContent>
           </Card>
