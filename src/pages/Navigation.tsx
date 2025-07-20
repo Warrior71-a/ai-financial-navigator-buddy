@@ -88,7 +88,14 @@ const Navigation = () => {
 
         {/* Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Navigation</h1>
+          <div className="flex flex-col items-center mb-6">
+            <img 
+              src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop&crop=face" 
+              alt="Profile" 
+              className="w-20 h-20 rounded-full object-cover border-4 border-white/20 mb-4"
+            />
+            <h1 className="text-4xl font-bold text-white mb-2">Navigation</h1>
+          </div>
           <p className="text-slate-400 text-lg">Choose a feature to get started</p>
         </div>
 
