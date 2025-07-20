@@ -127,6 +127,27 @@ export const financialGoalSchema = z.object({
   isCompleted: z.boolean()
 });
 
+// Investment Validation Schema
+export const investmentSchema = z.object({
+  symbol: z.string().min(1, 'Symbol is required').max(10, 'Symbol must be less than 10 characters'),
+  name: z.string().min(1, 'Company name is required').max(100, 'Name must be less than 100 characters'),
+  shares: z.string().min(1, 'Shares is required').refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    'Shares must be a positive number'
+  ),
+  purchasePrice: z.string().min(1, 'Purchase price is required').refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    'Purchase price must be a positive number'
+  ),
+  currentPrice: z.string().min(1, 'Current price is required').refine(
+    (val) => !isNaN(Number(val)) && Number(val) > 0,
+    'Current price must be a positive number'
+  ),
+  category: z.string().min(1, 'Category is required'),
+  platform: z.string().min(1, 'Platform is required').max(50, 'Platform must be less than 50 characters'),
+  notes: z.string().max(500, 'Notes must be less than 500 characters').optional()
+});
+
 // Type exports for form data
 export type ExpenseFormData = z.infer<typeof expenseSchema>;
 export type IncomeFormData = z.infer<typeof incomeSchema>;
@@ -134,6 +155,7 @@ export type CreditCardFormData = z.infer<typeof creditCardSchema>;
 export type LoanFormData = z.infer<typeof loanSchema>;
 export type BudgetFormData = z.infer<typeof budgetSchema>;
 export type FinancialGoalFormData = z.infer<typeof financialGoalSchema>;
+export type InvestmentFormData = z.infer<typeof investmentSchema>;
 
 // Custom validation refinements
 export const expenseSchemaWithRefinements = expenseSchema.refine(

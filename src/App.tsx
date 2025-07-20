@@ -15,6 +15,7 @@ import Navigation from "./pages/Navigation";
 import FinancialSnapshot from "./pages/FinancialSnapshot";
 import GoalTracking from "./pages/GoalTracking";
 import CashFlowCalendar from "./pages/CashFlowCalendar";
+import InvestmentTracking from "./pages/InvestmentTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/financial-snapshot" element={<FinancialSnapshot />} />
           <Route path="/goal-tracking" element={<GoalTracking />} />
           <Route path="/cash-flow-calendar" element={<CashFlowCalendar />} />
+          <Route path="/investment-tracking" element={<InvestmentTracking />} />
           <Route path="/navigation" element={<Navigation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

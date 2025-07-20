@@ -209,6 +209,42 @@ export interface DebtPayoffItem {
   estimatedPayoffMonths: number;
 }
 
+export interface Investment {
+  id: string;
+  symbol: string;
+  name: string;
+  shares: number;
+  purchasePrice: number;
+  currentPrice: number;
+  purchaseDate: Date;
+  category: InvestmentCategory;
+  platform: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type InvestmentCategory = 
+  | 'stocks'
+  | 'bonds'
+  | 'etf'
+  | 'mutual-funds'
+  | 'crypto'
+  | 'reit'
+  | 'options'
+  | 'commodities'
+  | 'other';
+
+export interface Portfolio {
+  totalValue: number;
+  totalGainLoss: number;
+  totalGainLossPercentage: number;
+  dayChange: number;
+  dayChangePercentage: number;
+  investments: Investment[];
+}
+
 // Local Storage Keys
 export const STORAGE_KEYS = {
   USER: 'finance_user',
@@ -218,6 +254,7 @@ export const STORAGE_KEYS = {
   BUDGETS: 'finance_budgets',
   GOALS: 'finance_goals',
   TRANSACTIONS: 'finance_transactions',
+  INVESTMENTS: 'finance_investments',
 } as const;
 
 // Category Icons and Colors
@@ -233,5 +270,17 @@ export const CATEGORY_CONFIG: Record<ExpenseCategory, { icon: string; color: str
   insurance: { icon: 'Shield', color: 'hsl(180 70% 50%)', label: 'Insurance' },
   savings: { icon: 'PiggyBank', color: 'hsl(120 70% 50%)', label: 'Savings' },
   debt: { icon: 'CreditCard', color: 'hsl(10 70% 50%)', label: 'Debt' },
+  other: { icon: 'MoreHorizontal', color: 'hsl(var(--muted-foreground))', label: 'Other' },
+};
+
+export const INVESTMENT_CATEGORY_CONFIG: Record<InvestmentCategory, { icon: string; color: string; label: string }> = {
+  stocks: { icon: 'TrendingUp', color: 'hsl(220 70% 50%)', label: 'Stocks' },
+  bonds: { icon: 'Shield', color: 'hsl(180 70% 50%)', label: 'Bonds' },
+  etf: { icon: 'BarChart3', color: 'hsl(40 90% 50%)', label: 'ETFs' },
+  'mutual-funds': { icon: 'PieChart', color: 'hsl(280 70% 50%)', label: 'Mutual Funds' },
+  crypto: { icon: 'Coins', color: 'hsl(60 90% 50%)', label: 'Cryptocurrency' },
+  reit: { icon: 'Building2', color: 'hsl(var(--primary))', label: 'REITs' },
+  options: { icon: 'ArrowUpDown', color: 'hsl(320 70% 50%)', label: 'Options' },
+  commodities: { icon: 'Wheat', color: 'hsl(40 70% 50%)', label: 'Commodities' },
   other: { icon: 'MoreHorizontal', color: 'hsl(var(--muted-foreground))', label: 'Other' },
 };

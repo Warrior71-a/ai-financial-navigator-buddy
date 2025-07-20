@@ -11,7 +11,8 @@ import {
   Camera,
   Target,
   Calendar,
-  ArrowLeft
+  ArrowLeft,
+  PieChart
 } from "lucide-react";
 
 const Navigation = () => {
@@ -87,6 +88,14 @@ const Navigation = () => {
       path: "/cash-flow-calendar",
       color: "text-teal-400",
       borderColor: "border-l-teal-500"
+    },
+    {
+      title: "Investment Tracking",
+      description: "Portfolio management and performance tracking",
+      icon: PieChart,
+      path: "/investment-tracking",
+      color: "text-violet-400",
+      borderColor: "border-l-violet-500"
     }
   ];
 
