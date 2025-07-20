@@ -140,7 +140,13 @@ export type Database = {
         | "shopping"
         | "other"
       expense_frequency: "weekly" | "monthly" | "yearly"
-      income_frequency: "weekly" | "monthly" | "yearly"
+      income_frequency:
+        | "weekly"
+        | "monthly"
+        | "yearly"
+        | "bi-weekly"
+        | "quarterly"
+        | "one-time"
       transaction_type: "income" | "expense"
     }
     CompositeTypes: {
@@ -280,7 +286,14 @@ export const Constants = {
         "other",
       ],
       expense_frequency: ["weekly", "monthly", "yearly"],
-      income_frequency: ["weekly", "monthly", "yearly"],
+      income_frequency: [
+        "weekly",
+        "monthly",
+        "yearly",
+        "bi-weekly",
+        "quarterly",
+        "one-time",
+      ],
       transaction_type: ["income", "expense"],
     },
   },
