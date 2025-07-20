@@ -27,7 +27,14 @@ const Income = () => {
   useEffect(() => {
     const savedIncomes = localStorage.getItem('financial-incomes');
     if (savedIncomes) {
-      setIncomes(JSON.parse(savedIncomes));
+      const parsedIncomes = JSON.parse(savedIncomes);
+      // Convert date strings back to Date objects
+      const incomesWithDates = parsedIncomes.map((income: any) => ({
+        ...income,
+        createdAt: new Date(income.createdAt),
+        updatedAt: new Date(income.updatedAt)
+      }));
+      setIncomes(incomesWithDates);
     }
   }, []);
 
