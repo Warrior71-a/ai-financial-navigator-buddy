@@ -5,6 +5,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FilterPanel } from '@/components/FilterPanel';
+import { useFinance } from '@/contexts/FinanceContext';
 import { cn } from '@/lib/utils';
 import { format, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 
@@ -85,10 +87,42 @@ const generateSampleData = (): DailyCashFlow[] => {
 
 export default function CashFlowCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const { getTransactionsByDate, getTotalIncome, getTotalExpenses, getFilteredTransactions } = useFinance();
+  
+  // Use real data from context, fallback to sample data for demo
+  const [useSampleData] = useState(true); // Set to false to use real data
   const [cashFlowData] = useState<DailyCashFlow[]>(generateSampleData());
   
   const getCashFlowForDate = (date: Date): DailyCashFlow | undefined => {
-    return cashFlowData.find(data => isSameDay(data.date, date));
+    if (useSampleData) {
+      return cashFlowData.find(data => isSameDay(data.date, date));
+    }
+    
+    // Use real transaction data
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const dayTransactions = getTransactionsByDate(dateStr);
+    
+    if (dayTransactions.length === 0) return undefined;
+    
+    const income = dayTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const expenses = dayTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    return {
+      date,
+      income,
+      expenses,
+      netFlow: income - expenses,
+      transactions: dayTransactions.map(t => ({
+        description: t.description,
+        amount: t.type === 'income' ? t.amount : -t.amount,
+        type: t.type
+      }))
+    };
   };
   
   const getSelectedDayData = (): DailyCashFlow | undefined => {
@@ -113,8 +147,15 @@ export default function CashFlowCalendar() {
   };
   
   const selectedDayData = getSelectedDayData();
-  const totalMonthlyIncome = cashFlowData.reduce((sum, day) => sum + day.income, 0);
-  const totalMonthlyExpenses = cashFlowData.reduce((sum, day) => sum + day.expenses, 0);
+  
+  const totalMonthlyIncome = useSampleData 
+    ? cashFlowData.reduce((sum, day) => sum + day.income, 0)
+    : getTotalIncome();
+    
+  const totalMonthlyExpenses = useSampleData
+    ? cashFlowData.reduce((sum, day) => sum + day.expenses, 0)
+    : getTotalExpenses();
+    
   const totalNetFlow = totalMonthlyIncome - totalMonthlyExpenses;
 
   return (
@@ -174,6 +215,13 @@ export default function CashFlowCalendar() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <FilterPanel compact />
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar */}

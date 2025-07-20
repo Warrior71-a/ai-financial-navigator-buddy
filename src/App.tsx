@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
+import { FinanceProvider } from "@/contexts/FinanceContext";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
 import ExpensesEnhanced from "./pages/ExpensesEnhanced";
@@ -21,7 +22,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <TooltipProvider>
+      <FinanceProvider>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -40,7 +42,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </FinanceProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
