@@ -242,7 +242,29 @@ const BudgetPlanner = () => {
         {/* Budget Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Budget Breakdown</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Monthly Budget Breakdown</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCategory('income')}
+                  className="text-green-700 border-green-200 hover:bg-green-50"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Income
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCategory('expense')}
+                  className="text-red-700 border-red-200 hover:bg-red-50"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Expense
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -260,18 +282,7 @@ const BudgetPlanner = () => {
                   {/* Income Section */}
                   <TableRow className="bg-green-50/50">
                     <TableCell className="sticky left-0 bg-green-50/50 border-r font-bold text-green-700" colSpan={14}>
-                      <div className="flex items-center justify-between">
-                        INCOME
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addCategory('income')}
-                          className="h-6 text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Category
-                        </Button>
-                      </div>
+                      INCOME
                     </TableCell>
                   </TableRow>
                   {incomeCategories.map(category => (
@@ -294,18 +305,7 @@ const BudgetPlanner = () => {
                   {/* Expenses Section */}
                   <TableRow className="bg-red-50/50">
                     <TableCell className="sticky left-0 bg-red-50/50 border-r font-bold text-red-700" colSpan={14}>
-                      <div className="flex items-center justify-between">
-                        EXPENSES
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addCategory('expense')}
-                          className="h-6 text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Category
-                        </Button>
-                      </div>
+                      EXPENSES
                     </TableCell>
                   </TableRow>
                   {expenseCategories.map(category => (
