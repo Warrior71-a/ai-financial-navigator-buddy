@@ -66,12 +66,14 @@ const FinancialSnapshot = () => {
 
         {/* Profile Section */}
         <div className="text-center mb-8">
-          <div className="relative mx-auto w-24 h-24 mb-4">
-            <div className="w-full h-full rounded-full border-2 border-cyan-400 bg-slate-700/50 flex items-center justify-center">
-              <User className="h-10 w-10 text-cyan-400" />
+          <Link to="/user-profile" className="inline-block">
+            <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer">
+              <div className="w-full h-full rounded-full border-2 border-cyan-400 bg-slate-700/50 flex items-center justify-center group-hover:bg-slate-600/50 transition-colors">
+                <User className="h-10 w-10 text-cyan-400" />
+              </div>
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse group-hover:border-cyan-300"></div>
             </div>
-            <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse"></div>
-          </div>
+          </Link>
           
           <h1 className="text-2xl font-bold text-white mb-2">Financial Snapshot</h1>
           <p className="text-sm text-slate-400">User ID: {userId}</p>
