@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { ModeToggle } from "@/components/mode-toggle";
 import { 
   Home, 
   Calculator, 
@@ -82,6 +83,7 @@ const Navigation = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
+          <ModeToggle />
         </div>
 
         {/* Title */}
