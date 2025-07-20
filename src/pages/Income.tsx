@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useFinance } from '@/contexts/FinanceContext';
 import { Income as IncomeType, IncomeFrequency } from '@/types/finance';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ const Income = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<IncomeType | null>(null);
   const { toast } = useToast();
+  const { addTransaction } = useFinance();
 
   const [formData, setFormData] = useState({
     source: '',
@@ -74,6 +76,14 @@ const Income = () => {
       });
     } else {
       setIncomes(prev => [...prev, income]);
+      // Add transaction to FinanceContext for dashboard
+      addTransaction({
+        type: 'income',
+        amount: income.amount,
+        category: income.source,
+        description: `${income.source} - ${income.frequency} income`,
+        date: new Date().toISOString().split('T')[0]
+      });
       toast({
         title: "Income Added",
         description: "New income source has been added successfully"

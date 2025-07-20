@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useFinance } from '@/contexts/FinanceContext';
 import { Expense, ExpenseCategory, ExpenseType, ExpenseFrequency, CATEGORY_CONFIG } from '@/types/finance';
 import { Link } from 'react-router-dom';
 
@@ -17,6 +18,7 @@ const Expenses = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { toast } = useToast();
+  const { addTransaction } = useFinance();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -90,6 +92,14 @@ const Expenses = () => {
       });
     } else {
       setExpenses(prev => [...prev, expense]);
+      // Add transaction to FinanceContext for dashboard
+      addTransaction({
+        type: 'expense',
+        amount: expense.amount,
+        category: expense.category,
+        description: `${expense.name} - ${expense.frequency} expense`,
+        date: new Date().toISOString().split('T')[0]
+      });
       toast({
         title: "Expense Added",
         description: "New expense has been added successfully"
