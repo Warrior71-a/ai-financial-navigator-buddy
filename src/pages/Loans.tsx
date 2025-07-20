@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit, Trash2, Building2, Car, User, GraduationCap, Briefcase, MoreHorizontal } from "lucide-react";
+import { Plus, Edit, Trash2, Building2, Car, User, GraduationCap, Briefcase, MoreHorizontal, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Loan, LoanType } from "@/types/finance";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const loanTypeIcons = {
   mortgage: Building2,
@@ -187,9 +188,16 @@ const Loans = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Loans</h1>
-          <p className="text-muted-foreground">Manage your loans and track payoff progress</p>
+        <div className="flex items-center gap-4">
+          <Link to="/navigation">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Loans</h1>
+            <p className="text-muted-foreground">Manage your loans and track payoff progress</p>
+          </div>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, DollarSign, Calendar, Edit, Trash2 } from 'lucide-react';
+import { Plus, DollarSign, Calendar, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Income as IncomeType, IncomeFrequency } from '@/types/finance';
+import { Link } from 'react-router-dom';
 
 const Income = () => {
   const [incomes, setIncomes] = useState<IncomeType[]>([]);
@@ -141,9 +142,16 @@ const Income = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Income Sources</h1>
-          <p className="text-muted-foreground">Manage your income streams and track your earnings</p>
+        <div className="flex items-center gap-4">
+          <Link to="/navigation">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Income Sources</h1>
+            <p className="text-muted-foreground">Manage your income streams and track your earnings</p>
+          </div>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, TrendingDown, Calendar, Edit, Trash2, Tag } from 'lucide-react';
+import { Plus, TrendingDown, Calendar, Edit, Trash2, Tag, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Expense, ExpenseCategory, ExpenseType, ExpenseFrequency, CATEGORY_CONFIG } from '@/types/finance';
+import { Link } from 'react-router-dom';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -213,9 +214,16 @@ const Expenses = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Expenses</h1>
-          <p className="text-muted-foreground">Track your spending and manage your budget</p>
+        <div className="flex items-center gap-4">
+          <Link to="/navigation">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Expenses</h1>
+            <p className="text-muted-foreground">Track your spending and manage your budget</p>
+          </div>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>

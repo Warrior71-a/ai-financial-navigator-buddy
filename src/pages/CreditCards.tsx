@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Edit, Plus, CreditCard as CreditCardIcon } from "lucide-react";
+import { Trash2, Edit, Plus, CreditCard as CreditCardIcon, ArrowLeft } from "lucide-react";
 import { CreditCard, STORAGE_KEYS } from "@/types/finance";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const CreditCards = () => {
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -163,9 +164,16 @@ const CreditCards = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Credit Cards</h1>
-          <p className="text-muted-foreground">Manage your credit cards and track balances</p>
+        <div className="flex items-center gap-4">
+          <Link to="/navigation">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Credit Cards</h1>
+            <p className="text-muted-foreground">Manage your credit cards and track balances</p>
+          </div>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>

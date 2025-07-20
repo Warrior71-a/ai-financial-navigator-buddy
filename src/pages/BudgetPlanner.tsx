@@ -4,8 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface BudgetCategory {
   id: string;
@@ -176,12 +177,19 @@ const BudgetPlanner = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-full mx-auto space-y-6">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Budget Planner</h1>
-          <p className="text-muted-foreground">
-            Plan and track your annual budget by organizing income and expenses across 12 months. 
-            Monitor your financial goals and make informed decisions about your spending.
-          </p>
+        <div className="flex items-center gap-4 mb-6">
+          <Link to="/navigation">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Budget Planner</h1>
+            <p className="text-muted-foreground">
+              Plan and track your annual budget by organizing income and expenses across 12 months. 
+              Monitor your financial goals and make informed decisions about your spending.
+            </p>
+          </div>
         </div>
 
         {/* Year Selector */}
