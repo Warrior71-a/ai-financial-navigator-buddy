@@ -18,17 +18,22 @@ const Index = () => {
   const { state, getTotalIncome, getTotalExpenses, getNetCashFlow } = useFinance();
   
   // Calculate financial data from context
-  const financialData = useMemo(() => ({
-    totalIncome: getTotalIncome(),
-    totalExpenses: getTotalExpenses(),
-    totalDebt: 0, // TODO: Add debt tracking
-    totalCreditLimit: 0, // TODO: Add credit tracking
-    creditUtilization: 0, // TODO: Add credit utilization tracking
-    netWorth: getTotalIncome() - getTotalExpenses(), // Simplified calculation
-    monthlyPayments: 0, // TODO: Add loan payments tracking
-    emergencyFund: 0, // TODO: Add emergency fund tracking
-    emergencyFundGoal: getTotalIncome() * 3, // 3 months of income as goal
-  }), [getTotalIncome, getTotalExpenses]);
+  const financialData = useMemo(() => {
+    const totalIncome = getTotalIncome();
+    const totalExpenses = getTotalExpenses();
+    
+    return {
+      totalIncome,
+      totalExpenses,
+      totalDebt: 0, // TODO: Add debt tracking
+      totalCreditLimit: 0, // TODO: Add credit tracking
+      creditUtilization: 0, // TODO: Add credit utilization tracking
+      netWorth: totalIncome - totalExpenses, // Simplified calculation
+      monthlyPayments: 0, // TODO: Add loan payments tracking
+      emergencyFund: 0, // TODO: Add emergency fund tracking
+      emergencyFundGoal: totalIncome * 3, // 3 months of income as goal
+    };
+  }, [getTotalIncome, getTotalExpenses]);
 
   // Get recent transactions (last 5)
   const recentTransactions = useMemo(() => 
