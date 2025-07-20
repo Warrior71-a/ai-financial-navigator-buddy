@@ -159,8 +159,8 @@ export default function CashFlowCalendar() {
   const totalNetFlow = totalMonthlyIncome - totalMonthlyExpenses;
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="page-container">
+      <div className="page-content max-w-7xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link to="/navigation">

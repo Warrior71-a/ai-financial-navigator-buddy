@@ -183,23 +183,19 @@ const InvestmentTracking = () => {
   const assetAllocation = getAssetAllocation();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="page-container">
+      <div className="page-content max-w-6xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="page-header">
           <div className="flex items-center gap-4">
-            <Link 
-              to="/navigation" 
-              className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-            >
+            <Link to="/navigation" className="back-button">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Investment Tracking</h1>
-              <p className="text-muted-foreground">Portfolio management and performance tracking</p>
+              <h1 className="page-title">Investment Tracking</h1>
+              <p className="page-subtitle">Portfolio management and performance tracking</p>
             </div>
           </div>
-
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => {

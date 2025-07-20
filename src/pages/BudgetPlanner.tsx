@@ -174,21 +174,21 @@ const BudgetPlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-full mx-auto space-y-6">
+    <div className="page-container">
+      <div className="page-content">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Link to="/navigation">
-            <Button variant="ghost" size="sm">
+        <div className="page-header">
+          <div className="flex items-center gap-4">
+            <Link to="/navigation" className="back-button">
               <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Budget Planner</h1>
-            <p className="text-muted-foreground">
-              Plan and track your annual budget by organizing income and expenses across 12 months. 
-              Monitor your financial goals and make informed decisions about your spending.
-            </p>
+            </Link>
+            <div className="space-y-2">
+              <h1 className="page-title">Budget Planner</h1>
+              <p className="page-subtitle">
+                Plan and track your annual budget by organizing income and expenses across 12 months. 
+                Monitor your financial goals and make informed decisions about your spending.
+              </p>
+            </div>
           </div>
         </div>
 

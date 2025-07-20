@@ -237,18 +237,18 @@ const ExpensesEnhanced = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="page-container">
+      <div className="page-content max-w-6xl">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Link to="/navigation">
-            <Button variant="ghost" size="icon" disabled={isSubmitting}>
+        <div className="page-header">
+          <div className="flex items-center gap-4">
+            <Link to="/navigation" className="back-button">
               <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Expenses</h1>
-            <p className="text-muted-foreground">Track and manage your spending</p>
+            </Link>
+            <div>
+              <h1 className="page-title">Expenses</h1>
+              <p className="page-subtitle">Track and manage your spending</p>
+            </div>
           </div>
         </div>
 

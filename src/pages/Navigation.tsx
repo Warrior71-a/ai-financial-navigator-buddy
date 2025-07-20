@@ -100,14 +100,11 @@ const Navigation = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="page-container">
+      <div className="page-content max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link 
-            to="/" 
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-          >
+        <div className="page-header">
+          <Link to="/" className="back-button">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <ModeToggle />
@@ -119,28 +116,28 @@ const Navigation = () => {
             <img 
               src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop&crop=face" 
               alt="Profile" 
-              className="w-20 h-20 rounded-full object-cover border-4 border-white/20 mb-4"
+              className="w-20 h-20 rounded-full object-cover border-4 border-border mb-4"
             />
-            <h1 className="text-4xl font-bold text-white mb-2">Navigation</h1>
+            <h1 className="page-title text-4xl">Navigation</h1>
           </div>
-          <p className="text-slate-400 text-lg">Choose a feature to get started</p>
+          <p className="page-subtitle text-lg">Choose a feature to get started</p>
         </div>
 
         {/* Navigation Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {navigationItems.map((item) => (
             <Link key={item.path} to={item.path} className="block group">
-              <Card className={`bg-slate-800/90 border-l-4 ${item.borderColor} border-r-0 border-t-0 border-b-0 rounded-lg hover:bg-slate-700/90 transition-all duration-200 group-hover:scale-105`}>
-                <CardContent className="p-6">
+              <Card className={`finance-card border-l-4 ${item.borderColor} border-r-0 border-t-0 border-b-0`}>
+                <CardContent className="finance-card-content">
                   <div className="flex items-start space-x-4">
-                    <div className={`p-3 rounded-lg bg-slate-700/50 ${item.color}`}>
+                    <div className={`p-3 rounded-lg bg-muted/50 ${item.color}`}>
                       <item.icon className="h-6 w-6" />
                     </div>
                     <div className="flex-1">
-                      <h3 className={`font-bold text-lg mb-2 ${item.color} group-hover:text-white transition-colors`}>
+                      <h3 className={`font-bold text-lg mb-2 ${item.color} group-hover:text-foreground transition-colors`}>
                         {item.title}
                       </h3>
-                      <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
+                      <p className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">
                         {item.description}
                       </p>
                     </div>
@@ -153,7 +150,7 @@ const Navigation = () => {
 
         {/* Footer */}
         <div className="mt-16 text-center">
-          <p className="text-slate-500 text-sm">
+          <p className="page-subtitle text-sm">
             All your financial tools in one place
           </p>
         </div>
