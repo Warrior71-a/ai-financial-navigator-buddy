@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle, Share2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -60,6 +60,12 @@ const Index = () => {
               <p className="text-muted-foreground">Overview of your financial health</p>
             </div>
             <div className="flex items-center space-x-2">
+              <Link to="/financial-snapshot">
+                <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                  <Share2 className="h-4 w-4" />
+                  <span>Share Snapshot</span>
+                </Button>
+              </Link>
               <Badge variant={monthlyBalance > 0 ? "default" : "destructive"}>
                 {monthlyBalance > 0 ? "Surplus" : "Deficit"}: {formatCurrency(Math.abs(monthlyBalance))}
               </Badge>

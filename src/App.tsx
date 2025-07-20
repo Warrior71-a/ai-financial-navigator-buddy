@@ -9,6 +9,7 @@ import Expenses from "./pages/Expenses";
 import CreditCards from "./pages/CreditCards";
 import Loans from "./pages/Loans";
 import BudgetPlanner from "./pages/BudgetPlanner";
+import FinancialSnapshot from "./pages/FinancialSnapshot";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/credit-cards" element={<CreditCards />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/budget-planner" element={<BudgetPlanner />} />
+          <Route path="/financial-snapshot" element={<FinancialSnapshot />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
