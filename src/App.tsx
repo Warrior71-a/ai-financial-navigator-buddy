@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
-import Expenses from "./pages/Expenses";
+import ExpensesEnhanced from "./pages/ExpensesEnhanced";
 import CreditCards from "./pages/CreditCards";
 import Loans from "./pages/Loans";
 import BudgetPlanner from "./pages/BudgetPlanner";
@@ -28,7 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/income" element={<Income />} />
-          <Route path="/expenses" element={<Expenses />} />
+          <Route path="/expenses" element={<ExpensesEnhanced />} />
           <Route path="/credit-cards" element={<CreditCards />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/budget-planner" element={<BudgetPlanner />} />
