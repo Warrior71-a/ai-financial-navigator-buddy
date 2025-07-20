@@ -10,6 +10,7 @@ import {
   Banknote, 
   Camera,
   Target,
+  Calendar,
   ArrowLeft
 } from "lucide-react";
 
@@ -78,6 +79,14 @@ const Navigation = () => {
       path: "/goal-tracking",
       color: "text-indigo-400",
       borderColor: "border-l-indigo-500"
+    },
+    {
+      title: "Cash Flow Calendar",
+      description: "Daily cash flow visualization",
+      icon: Calendar,
+      path: "/cash-flow-calendar",
+      color: "text-teal-400",
+      borderColor: "border-l-teal-500"
     }
   ];
 
