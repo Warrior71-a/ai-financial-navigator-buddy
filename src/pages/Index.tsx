@@ -15,25 +15,20 @@ import { FinancialHealthScore } from "@/components/FinancialHealthScore";
 const Index = () => {
   const { signOut, user } = useAuth();
   
-  // Mock data - in a real app this would come from your data store
+  // Real financial data - starts empty until user adds their information
   const [financialData] = useState({
-    totalIncome: 8500,
-    totalExpenses: 6200,
-    totalDebt: 297500,
-    totalCreditLimit: 25000,
-    creditUtilization: 32,
-    netWorth: 15300,
-    monthlyPayments: 2065,
-    emergencyFund: 12000,
-    emergencyFundGoal: 18000,
+    totalIncome: 0,
+    totalExpenses: 0,
+    totalDebt: 0,
+    totalCreditLimit: 0,
+    creditUtilization: 0,
+    netWorth: 0,
+    monthlyPayments: 0,
+    emergencyFund: 0,
+    emergencyFundGoal: 0,
   });
 
-  const recentTransactions = [
-    { id: 1, type: "income", description: "Salary - Tech Corp", amount: 5000, date: "2024-07-01" },
-    { id: 2, type: "expense", description: "Rent Payment", amount: -1800, date: "2024-07-01" },
-    { id: 3, type: "expense", description: "Groceries", amount: -320, date: "2024-06-30" },
-    { id: 4, type: "expense", description: "Utilities", amount: -180, date: "2024-06-29" },
-  ];
+  const recentTransactions: Array<{id: number, type: string, description: string, amount: number, date: string}> = [];
 
   const quickActions = [
     { title: "Add Income", icon: TrendingUp, color: "bg-green-500", link: "/income" },
@@ -49,7 +44,7 @@ const Index = () => {
     }).format(amount);
   };
 
-  const emergencyFundProgress = (financialData.emergencyFund / financialData.emergencyFundGoal) * 100;
+  const emergencyFundProgress = financialData.emergencyFundGoal > 0 ? (financialData.emergencyFund / financialData.emergencyFundGoal) * 100 : 0;
   const monthlyBalance = financialData.totalIncome - financialData.totalExpenses;
 
   return (
@@ -221,34 +216,43 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentTransactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      transaction.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${
+                        transaction.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                      }`}>
+                        {transaction.type === 'income' ? (
+                          <TrendingUp className="h-4 w-4" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className={`font-semibold ${
+                      transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {transaction.type === 'income' ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                      {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </div>
                   </div>
-                  <div className={`font-semibold ${
-                    transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-lg mb-2">No transactions yet</p>
+                  <p className="text-sm">Start by adding your income or expenses to see your financial activity</p>
                 </div>
-              ))}
+              )}
             </div>
-            <div className="mt-4 text-center">
-              <Button variant="outline">View All Transactions</Button>
-            </div>
+            {recentTransactions.length > 0 && (
+              <div className="mt-4 text-center">
+                <Button variant="outline">View All Transactions</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
