@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, ArrowLeft } from "lucide-react";
+import { User, ArrowLeft, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode";
 
@@ -83,37 +83,46 @@ const FinancialSnapshot = () => {
           
           <div className="space-y-4">
             {/* Total Income */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+            <Card className="bg-slate-800/90 border-l-4 border-l-green-500 border-r-0 border-t-0 border-b-0 rounded-lg">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-green-400 font-medium">Total Income:</span>
-                  <span className="text-green-400 font-bold text-xl">
-                    {formatCurrency(financialData.totalIncome)}
-                  </span>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Total Income</p>
+                    <p className="text-green-400 font-bold text-2xl">
+                      {formatCurrency(financialData.totalIncome)}
+                    </p>
+                  </div>
+                  <TrendingUp className="h-6 w-6 text-green-400" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Total Expenses */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+            <Card className="bg-slate-800/90 border-l-4 border-l-red-500 border-r-0 border-t-0 border-b-0 rounded-lg">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-red-400 font-medium">Total Expenses:</span>
-                  <span className="text-red-400 font-bold text-xl">
-                    {formatCurrency(financialData.totalExpenses)}
-                  </span>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Total Expenses</p>
+                    <p className="text-red-400 font-bold text-2xl">
+                      {formatCurrency(financialData.totalExpenses)}
+                    </p>
+                  </div>
+                  <TrendingDown className="h-6 w-6 text-red-400" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Net Savings */}
-            <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+            <Card className="bg-slate-800/90 border-l-4 border-l-cyan-500 border-r-0 border-t-0 border-b-0 rounded-lg">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-cyan-400 font-medium">Net Savings:</span>
-                  <span className="text-cyan-400 font-bold text-xl">
-                    {formatCurrency(financialData.netSavings)}
-                  </span>
+                  <div>
+                    <p className="text-slate-400 text-sm font-medium">Net Savings</p>
+                    <p className="text-cyan-400 font-bold text-2xl">
+                      {formatCurrency(financialData.netSavings)}
+                    </p>
+                  </div>
+                  <DollarSign className="h-6 w-6 text-cyan-400" />
                 </div>
               </CardContent>
             </Card>
