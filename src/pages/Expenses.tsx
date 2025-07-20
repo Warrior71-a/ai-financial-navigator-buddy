@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, TrendingDown, Calendar, Edit, Trash2, Tag, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,11 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Expense, ExpenseCategory, ExpenseType, ExpenseFrequency, CATEGORY_CONFIG } from '@/types/finance';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { addTransaction } = useFinance();
 
@@ -24,119 +26,143 @@ const Expenses = () => {
     name: '',
     amount: '',
     category: 'other' as ExpenseCategory,
-    type: 'need' as ExpenseType,
     frequency: 'monthly' as ExpenseFrequency,
-    description: '',
-    isRecurring: true,
-    isActive: true,
-    tags: ''
+    description: ''
   });
 
-  // Load expenses from localStorage on component mount
+  // Load expenses from Supabase on component mount
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('financial-expenses');
-    if (savedExpenses) {
-      const parsed = JSON.parse(savedExpenses);
-      // Convert date strings back to Date objects
-      const expensesWithDates = parsed.map((expense: any) => ({
-        ...expense,
-        createdAt: new Date(expense.createdAt),
-        updatedAt: new Date(expense.updatedAt),
-        dueDate: expense.dueDate ? new Date(expense.dueDate) : undefined,
-        nextDueDate: expense.nextDueDate ? new Date(expense.nextDueDate) : undefined
-      }));
-      setExpenses(expensesWithDates);
-    }
+    loadExpenses();
   }, []);
 
-  // Save expenses to localStorage whenever expenses change
-  useEffect(() => {
-    localStorage.setItem('financial-expenses', JSON.stringify(expenses));
-  }, [expenses]);
+  const loadExpenses = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Convert to our local format
+      const processedExpenses = data.map((expense: any) => ({
+        id: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        category: expense.category as ExpenseCategory,
+        frequency: expense.frequency as ExpenseFrequency,
+        description: expense.description || '',
+        type: 'need' as ExpenseType, // Default since not in DB
+        isRecurring: true, // Default since not in DB
+        isActive: expense.is_active,
+        tags: [], // Default since not in DB
+        createdAt: new Date(expense.created_at),
+        updatedAt: new Date(expense.updated_at)
+      }));
+      
+      setExpenses(processedExpenses);
+    } catch (error) {
+      console.error('Error loading expenses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load expense data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.amount) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        title: "Validation Error",
+        description: "Please fill in all required fields"
       });
       return;
     }
 
-    const today = new Date();
-    const expense: Expense = {
-      id: editingExpense?.id || Date.now().toString(),
-      name: formData.name,
-      amount: parseFloat(formData.amount),
-      category: formData.category,
-      type: formData.type,
-      frequency: formData.frequency,
-      description: formData.description,
-      isRecurring: formData.isRecurring,
-      dueDate: formData.isRecurring ? today : undefined,
-      nextDueDate: formData.isRecurring ? getNextDueDate(today, formData.frequency) : undefined,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
-      isActive: formData.isActive,
-      createdAt: editingExpense?.createdAt || today,
-      updatedAt: today
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add expenses",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    if (editingExpense) {
-      setExpenses(prev => prev.map(exp => exp.id === expense.id ? expense : exp));
+      // Map to database format, filtering out unsupported categories
+      const dbCategory = ['housing', 'transportation', 'food', 'utilities', 'entertainment', 'healthcare', 'shopping', 'other'].includes(formData.category) 
+        ? formData.category 
+        : 'other';
+      
+      const expenseData = {
+        user_id: user.id,
+        name: formData.name,
+        amount: parseFloat(formData.amount),
+        category: dbCategory as any,
+        frequency: formData.frequency as any,
+        description: formData.description,
+        is_active: true
+      };
+
+      if (editingExpense) {
+        const { error } = await supabase
+          .from('expenses')
+          .update(expenseData)
+          .eq('id', editingExpense.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Expense Updated",
+          description: "Expense has been updated successfully"
+        });
+      } else {
+        const { error } = await supabase
+          .from('expenses')
+          .insert(expenseData);
+
+        if (error) throw error;
+
+        // Add transaction to FinanceContext for dashboard
+        addTransaction({
+          type: 'expense',
+          amount: parseFloat(formData.amount),
+          category: formData.category,
+          description: `${formData.name} - ${formData.frequency} expense`,
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        toast({
+          title: "Expense Added",
+          description: "New expense has been added successfully"
+        });
+      }
+
+      // Reload expenses to get updated data
+      await loadExpenses();
+      resetForm();
+    } catch (error) {
+      console.error('Error saving expense:', error);
       toast({
-        title: "Expense Updated",
-        description: "Your expense has been updated successfully"
-      });
-    } else {
-      setExpenses(prev => [...prev, expense]);
-      // Add transaction to FinanceContext for dashboard
-      addTransaction({
-        type: 'expense',
-        amount: expense.amount,
-        category: expense.category,
-        description: `${expense.name} - ${expense.frequency} expense`,
-        date: new Date().toISOString().split('T')[0]
-      });
-      toast({
-        title: "Expense Added",
-        description: "New expense has been added successfully"
+        title: "Error",
+        description: "Failed to save expense data",
+        variant: "destructive"
       });
     }
-
-    resetForm();
-  };
-
-  const getNextDueDate = (currentDate: Date, frequency: ExpenseFrequency): Date => {
-    const next = new Date(currentDate);
-    switch (frequency) {
-      case 'daily':
-        next.setDate(next.getDate() + 1);
-        break;
-      case 'weekly':
-        next.setDate(next.getDate() + 7);
-        break;
-      case 'bi-weekly':
-        next.setDate(next.getDate() + 14);
-        break;
-      case 'monthly':
-        next.setMonth(next.getMonth() + 1);
-        break;
-      case 'quarterly':
-        next.setMonth(next.getMonth() + 3);
-        break;
-      case 'semi-annually':
-        next.setMonth(next.getMonth() + 6);
-        break;
-      case 'annually':
-        next.setFullYear(next.getFullYear() + 1);
-        break;
-      default:
-        return next;
-    }
-    return next;
   };
 
   const resetForm = () => {
@@ -144,12 +170,8 @@ const Expenses = () => {
       name: '',
       amount: '',
       category: 'other',
-      type: 'need',
       frequency: 'monthly',
-      description: '',
-      isRecurring: true,
-      isActive: true,
-      tags: ''
+      description: ''
     });
     setEditingExpense(null);
     setIsAddDialogOpen(false);
@@ -160,66 +182,73 @@ const Expenses = () => {
       name: expense.name,
       amount: expense.amount.toString(),
       category: expense.category,
-      type: expense.type,
       frequency: expense.frequency,
-      description: expense.description || '',
-      isRecurring: expense.isRecurring,
-      isActive: expense.isActive,
-      tags: expense.tags.join(', ')
+      description: expense.description || ''
     });
     setEditingExpense(expense);
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setExpenses(prev => prev.filter(exp => exp.id !== id));
-    toast({
-      title: "Expense Deleted",
-      description: "Expense has been removed successfully"
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await loadExpenses();
+      toast({
+        title: "Expense Deleted",
+        description: "Expense has been deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete expense",
+        variant: "destructive"
+      });
+    }
   };
 
   const getFrequencyColor = (frequency: ExpenseFrequency) => {
     switch (frequency) {
-      case 'daily': return 'bg-red-100 text-red-800';
       case 'weekly': return 'bg-blue-100 text-blue-800';
-      case 'bi-weekly': return 'bg-cyan-100 text-cyan-800';
       case 'monthly': return 'bg-purple-100 text-purple-800';
-      case 'quarterly': return 'bg-orange-100 text-orange-800';
-      case 'semi-annually': return 'bg-yellow-100 text-yellow-800';
       case 'annually': return 'bg-green-100 text-green-800';
-      case 'one-time': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const getTypeColor = (type: ExpenseType) => {
-    return type === 'need' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
   };
 
   const totalMonthlyExpenses = expenses
     .filter(expense => expense.isActive)
     .reduce((total, expense) => {
-      if (!expense.isRecurring) return total;
-      const multiplier = {
-        daily: 30,
-        weekly: 4.33,
-        'bi-weekly': 2.17,
-        monthly: 1,
-        quarterly: 0.33,
-        'semi-annually': 0.17,
-        annually: 0.083,
-        'one-time': 0
-      }[expense.frequency];
+      const multiplier = expense.frequency === 'weekly' ? 4.33 
+        : expense.frequency === 'monthly' ? 1 
+        : expense.frequency === 'annually' ? 1/12 
+        : expense.frequency === 'quarterly' ? 4
+        : expense.frequency === 'bi-weekly' ? 2.17
+        : expense.frequency === 'semi-annually' ? 2
+        : expense.frequency === 'daily' ? 30.4
+        : 1;
       return total + (expense.amount * multiplier);
     }, 0);
 
-  const expensesByCategory = expenses
-    .filter(expense => expense.isActive)
-    .reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<ExpenseCategory, number>);
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-8">
+          <p>Loading expense data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -267,40 +296,23 @@ const Expenses = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={(value: ExpenseCategory) => setFormData(prev => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="type">Type</Label>
-                  <Select 
-                    value={formData.type} 
-                    onValueChange={(value: ExpenseType) => setFormData(prev => ({ ...prev, type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="need">Need</SelectItem>
-                      <SelectItem value="want">Want</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value: ExpenseCategory) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="frequency">Frequency</Label>
@@ -312,14 +324,9 @@ const Expenses = () => {
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="semi-annually">Semi-annually</SelectItem>
                     <SelectItem value="annually">Annually</SelectItem>
-                    <SelectItem value="one-time">One-time</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -331,37 +338,6 @@ const Expenses = () => {
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 />
-              </div>
-              <div>
-                <Label htmlFor="tags">Tags (Optional)</Label>
-                <Input
-                  id="tags"
-                  placeholder="e.g., essential, subscription, variable"
-                  value={formData.tags}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                />
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isRecurring"
-                    checked={formData.isRecurring}
-                    onChange={(e) => setFormData(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <Label htmlFor="isRecurring">Recurring</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <Label htmlFor="isActive">Active</Label>
-                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1">
@@ -387,7 +363,7 @@ const Expenses = () => {
             ${totalMonthlyExpenses.toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">
-            Based on {expenses.filter(exp => exp.isActive && exp.isRecurring).length} active recurring expense(s)
+            Based on {expenses.filter(exp => exp.isActive).length} active expense(s)
           </p>
         </CardContent>
       </Card>
@@ -410,61 +386,48 @@ const Expenses = () => {
           </Card>
         ) : (
           expenses.map((expense) => (
-            <Card key={expense.id} className={!expense.isActive ? 'opacity-60' : ''}>
+            <Card key={expense.id}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{expense.name}</h3>
-                      <Badge className={getFrequencyColor(expense.frequency)}>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold">{expense.name}</h3>
+                    <p className="text-2xl font-bold text-red-600">
+                      ${expense.amount.toLocaleString()}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant="secondary"
+                        className={getFrequencyColor(expense.frequency)}
+                      >
                         {expense.frequency}
-                      </Badge>
-                      <Badge className={getTypeColor(expense.type)}>
-                        {expense.type}
                       </Badge>
                       <Badge variant="outline" style={{ color: CATEGORY_CONFIG[expense.category].color }}>
                         {CATEGORY_CONFIG[expense.category].label}
                       </Badge>
-                      {!expense.isActive && (
-                        <Badge variant="secondary">Inactive</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <TrendingDown className="h-4 w-4" />
-                        ${expense.amount.toFixed(2)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                      <span className="text-sm text-muted-foreground">
                         Added {expense.createdAt.toLocaleDateString()}
                       </span>
-                      {expense.tags.length > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Tag className="h-4 w-4" />
-                          {expense.tags.join(', ')}
-                        </span>
-                      )}
                     </div>
                     {expense.description && (
-                      <p className="text-sm text-muted-foreground mt-2">
+                      <p className="text-sm text-muted-foreground">
                         {expense.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleEdit(expense)}
                     >
-                      <Edit className="h-4 w-4" />
+                      Edit
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDelete(expense.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>

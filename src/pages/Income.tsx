@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, DollarSign, Calendar, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Income as IncomeType, IncomeFrequency } from '@/types/finance';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Income = () => {
   const [incomes, setIncomes] = useState<IncomeType[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState<IncomeType | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { addTransaction } = useFinance();
 
@@ -26,71 +28,127 @@ const Income = () => {
     isActive: true
   });
 
-  // Load incomes from localStorage on component mount
+  // Load incomes from Supabase on component mount
   useEffect(() => {
-    const savedIncomes = localStorage.getItem('financial-incomes');
-    if (savedIncomes) {
-      const parsedIncomes = JSON.parse(savedIncomes);
-      // Convert date strings back to Date objects
-      const incomesWithDates = parsedIncomes.map((income: any) => ({
-        ...income,
-        createdAt: new Date(income.createdAt),
-        updatedAt: new Date(income.updatedAt)
-      }));
-      setIncomes(incomesWithDates);
-    }
+    loadIncomes();
   }, []);
 
-  // Save incomes to localStorage whenever incomes change
-  useEffect(() => {
-    localStorage.setItem('financial-incomes', JSON.stringify(incomes));
-  }, [incomes]);
+  const loadIncomes = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.source || !formData.amount) {
+      const { data, error } = await supabase
+        .from('incomes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Convert to our local format
+      const processedIncomes = data.map((income: any) => ({
+        id: income.id,
+        source: income.source,
+        amount: income.amount,
+        frequency: income.frequency as IncomeFrequency,
+        isActive: income.is_active,
+        createdAt: new Date(income.created_at),
+        updatedAt: new Date(income.updated_at)
+      }));
+      
+      setIncomes(processedIncomes);
+    } catch (error) {
+      console.error('Error loading incomes:', error);
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Failed to load income data",
         variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.source || !formData.amount || !formData.frequency) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields"
       });
       return;
     }
 
-    const income: IncomeType = {
-      id: editingIncome?.id || Date.now().toString(),
-      source: formData.source,
-      amount: parseFloat(formData.amount),
-      frequency: formData.frequency,
-      isActive: formData.isActive,
-      createdAt: editingIncome?.createdAt || new Date(),
-      updatedAt: new Date()
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add income",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    if (editingIncome) {
-      setIncomes(prev => prev.map(inc => inc.id === income.id ? income : inc));
+      const incomeData = {
+        user_id: user.id,
+        source: formData.source,
+        amount: parseFloat(formData.amount),
+        frequency: formData.frequency as any,
+        is_active: true
+      };
+
+      if (editingIncome) {
+        const { error } = await supabase
+          .from('incomes')
+          .update(incomeData)
+          .eq('id', editingIncome.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Income Updated",
+          description: "Income source has been updated successfully"
+        });
+      } else {
+        const { error } = await supabase
+          .from('incomes')
+          .insert(incomeData);
+
+        if (error) throw error;
+
+        // Add transaction to FinanceContext for dashboard
+        addTransaction({
+          type: 'income',
+          amount: parseFloat(formData.amount),
+          category: formData.source,
+          description: `${formData.source} - ${formData.frequency} income`,
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        toast({
+          title: "Income Added",
+          description: "New income source has been added successfully"
+        });
+      }
+
+      // Reload incomes to get updated data
+      await loadIncomes();
+      resetForm();
+    } catch (error) {
+      console.error('Error saving income:', error);
       toast({
-        title: "Income Updated",
-        description: "Your income source has been updated successfully"
-      });
-    } else {
-      setIncomes(prev => [...prev, income]);
-      // Add transaction to FinanceContext for dashboard
-      addTransaction({
-        type: 'income',
-        amount: income.amount,
-        category: income.source,
-        description: `${income.source} - ${income.frequency} income`,
-        date: new Date().toISOString().split('T')[0]
-      });
-      toast({
-        title: "Income Added",
-        description: "New income source has been added successfully"
+        title: "Error",
+        description: "Failed to save income data",
+        variant: "destructive"
       });
     }
-
-    resetForm();
   };
 
   const resetForm = () => {
@@ -115,21 +173,41 @@ const Income = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setIncomes(prev => prev.filter(inc => inc.id !== id));
-    toast({
-      title: "Income Deleted",
-      description: "Income source has been removed successfully"
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('incomes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      await loadIncomes();
+      toast({
+        title: "Income Deleted",
+        description: "Income source has been deleted successfully"
+      });
+    } catch (error) {
+      console.error('Error deleting income:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete income",
+        variant: "destructive"
+      });
+    }
   };
 
   const getFrequencyColor = (frequency: IncomeFrequency) => {
     switch (frequency) {
       case 'weekly': return 'bg-blue-100 text-blue-800';
-      case 'bi-weekly': return 'bg-green-100 text-green-800';
       case 'monthly': return 'bg-purple-100 text-purple-800';
-      case 'quarterly': return 'bg-orange-100 text-orange-800';
       case 'yearly': return 'bg-red-100 text-red-800';
+      case 'bi-weekly': return 'bg-teal-100 text-teal-800';
+      case 'quarterly': return 'bg-orange-100 text-orange-800';
       case 'one-time': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -138,16 +216,25 @@ const Income = () => {
   const totalMonthlyIncome = incomes
     .filter(income => income.isActive)
     .reduce((total, income) => {
-      const multiplier = {
-        weekly: 4.33,
-        'bi-weekly': 2.17,
-        monthly: 1,
-        quarterly: 0.33,
-        yearly: 0.083,
-        'one-time': 0
-      }[income.frequency];
+      const multiplier = income.frequency === 'weekly' ? 4.33 
+        : income.frequency === 'monthly' ? 1 
+        : income.frequency === 'yearly' ? 1/12 
+        : income.frequency === 'quarterly' ? 4
+        : income.frequency === 'bi-weekly' ? 2.17
+        : income.frequency === 'one-time' ? 0
+        : 1;
       return total + (income.amount * multiplier);
     }, 0);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-8">
+          <p>Loading income data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -206,23 +293,10 @@ const Income = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
                     <SelectItem value="yearly">Yearly</SelectItem>
-                    <SelectItem value="one-time">One-time</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                  className="rounded"
-                />
-                <Label htmlFor="isActive">Active income source</Label>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1">
@@ -271,44 +345,40 @@ const Income = () => {
           </Card>
         ) : (
           incomes.map((income) => (
-            <Card key={income.id} className={!income.isActive ? 'opacity-60' : ''}>
+            <Card key={income.id}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{income.source}</h3>
-                      <Badge className={getFrequencyColor(income.frequency)}>
+                  <div className="space-y-1">
+                    <h3 className="font-semibold">{income.source}</h3>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${income.amount.toLocaleString()}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant="secondary"
+                        className={getFrequencyColor(income.frequency)}
+                      >
                         {income.frequency}
                       </Badge>
-                      {!income.isActive && (
-                        <Badge variant="secondary">Inactive</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        ${income.amount.toFixed(2)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                      <span className="text-sm text-muted-foreground">
                         Added {income.createdAt.toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleEdit(income)}
                     >
-                      <Edit className="h-4 w-4" />
+                      Edit
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDelete(income.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>
