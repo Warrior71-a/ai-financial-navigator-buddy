@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle, Share2 } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle, Share2, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +13,8 @@ import { SmartAlerts } from "@/components/SmartAlerts";
 import { FinancialHealthScore } from "@/components/FinancialHealthScore";
 
 const Index = () => {
+  const { signOut, user } = useAuth();
+  
   // Mock data - in a real app this would come from your data store
   const [financialData] = useState({
     totalIncome: 8500,
@@ -69,6 +72,10 @@ const Index = () => {
               <Badge variant={monthlyBalance > 0 ? "default" : "destructive"}>
                 {monthlyBalance > 0 ? "Surplus" : "Deficit"}: {formatCurrency(Math.abs(monthlyBalance))}
               </Badge>
+              <Button variant="outline" size="sm" onClick={signOut} className="flex items-center space-x-2">
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </Button>
             </div>
           </div>
         </div>
