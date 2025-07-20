@@ -12,7 +12,8 @@ import {
   Target,
   Calendar,
   ArrowLeft,
-  PieChart
+  PieChart,
+  User
 } from "lucide-react";
 
 const Navigation = () => {
@@ -96,6 +97,14 @@ const Navigation = () => {
       path: "/investment-tracking",
       color: "text-violet-400",
       borderColor: "border-l-violet-500"
+    },
+    {
+      title: "User Profile",
+      description: "Manage your profile and preferences",
+      icon: User,
+      path: "/user-profile",
+      color: "text-pink-400",
+      borderColor: "border-l-pink-500"
     }
   ];
 
