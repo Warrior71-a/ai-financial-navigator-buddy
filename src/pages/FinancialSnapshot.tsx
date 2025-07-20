@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, ArrowLeft, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode";
@@ -68,9 +69,12 @@ const FinancialSnapshot = () => {
         <div className="text-center mb-8">
           <Link to="/user-profile" className="inline-block">
             <div className="relative mx-auto w-24 h-24 mb-4 group cursor-pointer">
-              <div className="w-full h-full rounded-full border-2 border-cyan-400 bg-slate-700/50 flex items-center justify-center group-hover:bg-slate-600/50 transition-colors">
-                <User className="h-10 w-10 text-cyan-400" />
-              </div>
+              <Avatar className="w-24 h-24 border-2 border-cyan-400 group-hover:border-cyan-300 transition-colors">
+                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" />
+                <AvatarFallback className="bg-slate-700/50 text-cyan-400 text-xl">
+                  JD
+                </AvatarFallback>
+              </Avatar>
               <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse group-hover:border-cyan-300"></div>
             </div>
           </Link>
