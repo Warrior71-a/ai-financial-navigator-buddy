@@ -68,11 +68,21 @@ const Expenses = () => {
       }));
       
       setExpenses(processedExpenses);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading expenses:', error);
+      
+      let errorMessage = "Failed to load expense data";
+      if (error?.message?.includes('permission')) {
+        errorMessage = "You don't have permission to access this data. Please log in again.";
+      } else if (error?.message?.includes('RLS')) {
+        errorMessage = "Access denied. Please ensure you're logged in properly.";
+      } else if (error?.code === '42501') {
+        errorMessage = "Insufficient permissions. Please log in again.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load expense data",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -155,11 +165,19 @@ const Expenses = () => {
       // Reload expenses to get updated data
       await loadExpenses();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving expense:', error);
+      
+      let errorMessage = "Failed to save expense data";
+      if (error?.message?.includes('permission') || error?.code === '42501') {
+        errorMessage = "You don't have permission to save data. Please log in again.";
+      } else if (error?.message?.includes('RLS')) {
+        errorMessage = "Access denied. Please ensure you're logged in properly.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save expense data",
+        description: errorMessage,
         variant: "destructive"
       });
     }

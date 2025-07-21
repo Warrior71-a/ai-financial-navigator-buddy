@@ -69,10 +69,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Clean up any existing state first
+      setUser(null);
+      setSession(null);
+      
       await supabase.auth.signOut({ scope: 'global' });
+      
+      // Force page reload to ensure clean state
       window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
+      // Force redirect even if sign out fails
+      window.location.href = '/auth';
     }
   };
 

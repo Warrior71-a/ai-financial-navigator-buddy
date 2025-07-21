@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { FinanceProvider } from "@/contexts/FinanceContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
 import ExpensesEnhanced from "./pages/ExpensesEnhanced";
@@ -26,10 +27,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <FinanceProvider>
-          <TooltipProvider>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <FinanceProvider>
+            <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -51,10 +53,11 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-          </TooltipProvider>
-        </FinanceProvider>
-      </AuthProvider>
-    </ThemeProvider>
+            </TooltipProvider>
+          </FinanceProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   </QueryClientProvider>
 );
 

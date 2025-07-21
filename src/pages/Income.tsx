@@ -61,11 +61,21 @@ const Income = () => {
       }));
       
       setIncomes(processedIncomes);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading incomes:', error);
+      
+      let errorMessage = "Failed to load income data";
+      if (error?.message?.includes('permission')) {
+        errorMessage = "You don't have permission to access this data. Please log in again.";
+      } else if (error?.message?.includes('RLS')) {
+        errorMessage = "Access denied. Please ensure you're logged in properly.";
+      } else if (error?.code === '42501') {
+        errorMessage = "Insufficient permissions. Please log in again.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load income data",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -141,11 +151,19 @@ const Income = () => {
       // Reload incomes to get updated data
       await loadIncomes();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving income:', error);
+      
+      let errorMessage = "Failed to save income data";
+      if (error?.message?.includes('permission') || error?.code === '42501') {
+        errorMessage = "You don't have permission to save data. Please log in again.";
+      } else if (error?.message?.includes('RLS')) {
+        errorMessage = "Access denied. Please ensure you're logged in properly.";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save income data",
+        description: errorMessage,
         variant: "destructive"
       });
     }
