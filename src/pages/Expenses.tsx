@@ -141,10 +141,13 @@ const Expenses = () => {
           description: "Expense has been updated successfully"
         });
       } else {
-        const { error } = await supabase
+        console.log('Attempting to insert expense:', expenseData);
+        const { data, error } = await supabase
           .from('expenses')
-          .insert(expenseData);
+          .insert(expenseData)
+          .select();
 
+        console.log('Insert result:', { data, error });
         if (error) throw error;
 
         // Add transaction to FinanceContext for dashboard
