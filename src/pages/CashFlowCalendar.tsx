@@ -89,9 +89,9 @@ export default function CashFlowCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { getTransactionsByDate, getTotalIncome, getTotalExpenses, getFilteredTransactions } = useFinance();
   
-  // Use real data from context, fallback to sample data for demo
-  const [useSampleData] = useState(true); // Set to false to use real data
-  const [cashFlowData] = useState<DailyCashFlow[]>(generateSampleData());
+  // Use real data from context instead of sample data
+  const [useSampleData] = useState(false); // Using real data now
+  const [cashFlowData] = useState<DailyCashFlow[]>([]);
   
   const getCashFlowForDate = (date: Date): DailyCashFlow | undefined => {
     if (useSampleData) {
@@ -148,13 +148,8 @@ export default function CashFlowCalendar() {
   
   const selectedDayData = getSelectedDayData();
   
-  const totalMonthlyIncome = useSampleData 
-    ? cashFlowData.reduce((sum, day) => sum + day.income, 0)
-    : getTotalIncome();
-    
-  const totalMonthlyExpenses = useSampleData
-    ? cashFlowData.reduce((sum, day) => sum + day.expenses, 0)
-    : getTotalExpenses();
+  const totalMonthlyIncome = getTotalIncome();
+  const totalMonthlyExpenses = getTotalExpenses();
     
   const totalNetFlow = totalMonthlyIncome - totalMonthlyExpenses;
 

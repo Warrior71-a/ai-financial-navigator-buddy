@@ -31,42 +31,10 @@ const loanTypeColors = {
 };
 
 const Loans = () => {
-  const [loans, setLoans] = useState<Loan[]>([
-    {
-      id: "1",
-      name: "Home Mortgage",
-      lender: "First National Bank",
-      loanType: "mortgage",
-      originalAmount: 350000,
-      currentBalance: 285000,
-      interestRate: 3.5,
-      monthlyPayment: 1580,
-      term: 360,
-      remainingTerm: 285,
-      dueDate: new Date(2024, 8, 1), // Sept 1st
-      nextDueDate: new Date(2024, 8, 1),
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "2",
-      name: "Toyota Camry",
-      lender: "Auto Credit Union",
-      loanType: "auto",
-      originalAmount: 28000,
-      currentBalance: 12500,
-      interestRate: 4.2,
-      monthlyPayment: 485,
-      term: 60,
-      remainingTerm: 26,
-      dueDate: new Date(2024, 7, 15), // Aug 15th
-      nextDueDate: new Date(2024, 7, 15),
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]);
+  const [loans, setLoans] = useState<Loan[]>(() => {
+    const saved = localStorage.getItem('loans');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
@@ -129,19 +97,23 @@ const Loans = () => {
       updatedAt: new Date(),
     };
 
+    let updatedLoans;
     if (editingLoan) {
-      setLoans(loans.map(loan => loan.id === editingLoan.id ? loanData : loan));
+      updatedLoans = loans.map(loan => loan.id === editingLoan.id ? loanData : loan);
+      setLoans(updatedLoans);
       toast({
         title: "Loan Updated",
         description: "Your loan has been updated successfully.",
       });
     } else {
-      setLoans([...loans, loanData]);
+      updatedLoans = [...loans, loanData];
+      setLoans(updatedLoans);
       toast({
         title: "Loan Added",
         description: "Your new loan has been added successfully.",
       });
     }
+    localStorage.setItem('loans', JSON.stringify(updatedLoans));
 
     setIsDialogOpen(false);
     resetForm();
@@ -164,7 +136,9 @@ const Loans = () => {
   };
 
   const handleDelete = (id: string) => {
-    setLoans(loans.filter(loan => loan.id !== id));
+    const updatedLoans = loans.filter(loan => loan.id !== id);
+    setLoans(updatedLoans);
+    localStorage.setItem('loans', JSON.stringify(updatedLoans));
     toast({
       title: "Loan Deleted",
       description: "The loan has been removed successfully.",

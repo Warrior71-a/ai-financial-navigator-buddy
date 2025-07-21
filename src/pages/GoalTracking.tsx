@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,61 +7,11 @@ import { ArrowLeft, Target, Plus, Calendar, DollarSign } from "lucide-react";
 import { FinancialGoal } from "@/types/finance";
 
 const GoalTracking = () => {
-  // Sample financial goals
-  const [goals] = useState<FinancialGoal[]>([
-    {
-      id: "1",
-      name: "Emergency Fund",
-      type: "emergency-fund",
-      targetAmount: 10000,
-      currentAmount: 6500,
-      targetDate: new Date("2024-12-31"),
-      monthlyContribution: 500,
-      priority: "high",
-      isCompleted: false,
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-07-15")
-    },
-    {
-      id: "2", 
-      name: "Vacation to Europe",
-      type: "vacation",
-      targetAmount: 5000,
-      currentAmount: 3200,
-      targetDate: new Date("2024-08-15"),
-      monthlyContribution: 400,
-      priority: "medium",
-      isCompleted: false,
-      createdAt: new Date("2024-03-01"),
-      updatedAt: new Date("2024-07-18")
-    },
-    {
-      id: "3",
-      name: "New Car Down Payment",
-      type: "other",
-      targetAmount: 8000,
-      currentAmount: 2100,
-      targetDate: new Date("2025-06-30"),
-      monthlyContribution: 300,
-      priority: "medium",
-      isCompleted: false,
-      createdAt: new Date("2024-04-01"),
-      updatedAt: new Date("2024-07-10")
-    },
-    {
-      id: "4",
-      name: "Home Renovation",
-      type: "home-purchase",
-      targetAmount: 15000,
-      currentAmount: 15000,
-      targetDate: new Date("2024-03-01"),
-      monthlyContribution: 0,
-      priority: "high",
-      isCompleted: true,
-      createdAt: new Date("2023-10-01"),
-      updatedAt: new Date("2024-03-01")
-    }
-  ]);
+  // Load financial goals from localStorage
+  const [goals, setGoals] = useState<FinancialGoal[]>(() => {
+    const saved = localStorage.getItem('financial-goals');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const calculateProgress = (current: number, target: number) => {
     return Math.min((current / target) * 100, 100);
@@ -90,6 +40,11 @@ const GoalTracking = () => {
       default: return 'text-gray-400';
     }
   };
+
+  // Save goals to localStorage whenever goals change
+  useEffect(() => {
+    localStorage.setItem('financial-goals', JSON.stringify(goals));
+  }, [goals]);
 
   const activeGoals = goals.filter(goal => !goal.isCompleted);
   const completedGoals = goals.filter(goal => goal.isCompleted);
