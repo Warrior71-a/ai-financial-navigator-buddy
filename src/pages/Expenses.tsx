@@ -164,6 +164,10 @@ const Expenses = () => {
 
       // Reload expenses to get updated data
       await loadExpenses();
+      
+      // Trigger custom event for FinanceContext to update
+      window.dispatchEvent(new Event('expensesUpdated'));
+      
       resetForm();
     } catch (error: any) {
       console.error('Error saving expense:', error);
@@ -221,6 +225,10 @@ const Expenses = () => {
       if (error) throw error;
 
       await loadExpenses();
+      
+      // Trigger custom event for FinanceContext to update
+      window.dispatchEvent(new Event('expensesUpdated'));
+      
       toast({
         title: "Expense Deleted",
         description: "Expense has been deleted successfully"

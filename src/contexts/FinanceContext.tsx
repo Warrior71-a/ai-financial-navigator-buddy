@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useLocalStorageWithErrorRecovery } from '@/hooks/useLocalStorage';
+import { supabase } from '@/integrations/supabase/client';
+import { Loan } from '@/types/finance';
 
 export interface Transaction {
   id: string;
@@ -93,12 +95,17 @@ interface FinanceContextType {
   getNetCashFlow: (filtered?: boolean) => number;
   getTransactionsByDate: (date: string) => Transaction[];
   getCategories: () => string[];
+  // Enhanced methods for dashboard
+  getTotalDebt: () => number;
+  getTotalMonthlyPayments: () => number;
+  getTotalMonthlyExpensesFromSupabase: () => number;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
+  const [supabaseExpenses, setSupabaseExpenses] = React.useState<any[]>([]);
   
   const { value: persistedTransactions, setValue: setPersistedTransactions } = 
     useLocalStorageWithErrorRecovery<Transaction[]>('finance-transactions', [], {
@@ -113,6 +120,72 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           typeof item.date === 'string'
         )
     });
+
+  // Get loans from localStorage with listener for changes
+  const [loans, setLoans] = React.useState<Loan[]>([]);
+  
+  React.useEffect(() => {
+    const loadLoans = () => {
+      try {
+        const saved = localStorage.getItem('loans');
+        setLoans(saved ? JSON.parse(saved) : []);
+      } catch {
+        setLoans([]);
+      }
+    };
+
+    // Load initial loans
+    loadLoans();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'loans') {
+        loadLoans();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleLoansUpdate = () => loadLoans();
+    window.addEventListener('loansUpdated', handleLoansUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('loansUpdated', handleLoansUpdate);
+    };
+  }, []);
+
+  // Load Supabase expenses
+  React.useEffect(() => {
+    const loadSupabaseExpenses = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        setSupabaseExpenses(data || []);
+      } catch (error) {
+        console.error('Error loading Supabase expenses:', error);
+      }
+    };
+
+    // Load initial expenses
+    loadSupabaseExpenses();
+    
+    // Listen for expense updates
+    const handleExpensesUpdate = () => loadSupabaseExpenses();
+    window.addEventListener('expensesUpdated', handleExpensesUpdate);
+
+    return () => {
+      window.removeEventListener('expensesUpdated', handleExpensesUpdate);
+    };
+  }, []);
 
   // Load persisted transactions on mount
   React.useEffect(() => {
@@ -213,6 +286,27 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return categories.sort();
   }, [state.transactions]);
 
+  // New methods for enhanced dashboard data
+  const getTotalDebt = useCallback(() => {
+    return loans.reduce((sum: number, loan: Loan) => sum + loan.currentBalance, 0);
+  }, [loans]);
+
+  const getTotalMonthlyPayments = useCallback(() => {
+    return loans.reduce((sum: number, loan: Loan) => sum + loan.monthlyPayment, 0);
+  }, [loans]);
+
+  const getTotalMonthlyExpensesFromSupabase = useCallback(() => {
+    return supabaseExpenses
+      .filter(expense => expense.is_active)
+      .reduce((total, expense) => {
+        const multiplier = expense.frequency === 'weekly' ? 4.33 
+          : expense.frequency === 'monthly' ? 1 
+          : expense.frequency === 'annually' ? 1/12 
+          : 1;
+        return total + (expense.amount * multiplier);
+      }, 0);
+  }, [supabaseExpenses]);
+
   const contextValue: FinanceContextType = {
     state,
     addTransaction,
@@ -225,7 +319,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     getTotalExpenses,
     getNetCashFlow,
     getTransactionsByDate,
-    getCategories
+    getCategories,
+    getTotalDebt,
+    getTotalMonthlyPayments,
+    getTotalMonthlyExpensesFromSupabase
   };
 
   return (

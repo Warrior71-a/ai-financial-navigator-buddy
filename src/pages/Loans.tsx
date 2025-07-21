@@ -114,6 +114,9 @@ const Loans = () => {
       });
     }
     localStorage.setItem('loans', JSON.stringify(updatedLoans));
+    
+    // Trigger custom event for FinanceContext to update
+    window.dispatchEvent(new Event('loansUpdated'));
 
     setIsDialogOpen(false);
     resetForm();
@@ -139,6 +142,10 @@ const Loans = () => {
     const updatedLoans = loans.filter(loan => loan.id !== id);
     setLoans(updatedLoans);
     localStorage.setItem('loans', JSON.stringify(updatedLoans));
+    
+    // Trigger custom event for FinanceContext to update
+    window.dispatchEvent(new Event('loansUpdated'));
+    
     toast({
       title: "Loan Deleted",
       description: "The loan has been removed successfully.",

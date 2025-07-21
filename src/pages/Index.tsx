@@ -15,25 +15,37 @@ import { FinancialHealthScore } from "@/components/FinancialHealthScore";
 
 const Index = () => {
   const { signOut, user } = useAuth();
-  const { state, getTotalIncome, getTotalExpenses, getNetCashFlow } = useFinance();
+  const { 
+    state, 
+    getTotalIncome, 
+    getTotalExpenses, 
+    getNetCashFlow, 
+    getTotalDebt, 
+    getTotalMonthlyPayments,
+    getTotalMonthlyExpensesFromSupabase 
+  } = useFinance();
   
   // Calculate financial data from context
   const financialData = useMemo(() => {
     const totalIncome = getTotalIncome();
-    const totalExpenses = getTotalExpenses();
+    const transactionExpenses = getTotalExpenses();
+    const supabaseExpenses = getTotalMonthlyExpensesFromSupabase();
+    const totalExpenses = transactionExpenses + supabaseExpenses;
+    const totalDebt = getTotalDebt();
+    const monthlyPayments = getTotalMonthlyPayments();
     
     return {
       totalIncome,
       totalExpenses,
-      totalDebt: 0, // TODO: Add debt tracking
+      totalDebt,
       totalCreditLimit: 0, // TODO: Add credit tracking
       creditUtilization: 0, // TODO: Add credit utilization tracking
-      netWorth: totalIncome - totalExpenses, // Simplified calculation
-      monthlyPayments: 0, // TODO: Add loan payments tracking
+      netWorth: totalIncome - totalExpenses - totalDebt, // More accurate calculation
+      monthlyPayments,
       emergencyFund: 0, // TODO: Add emergency fund tracking
       emergencyFundGoal: totalIncome * 3, // 3 months of income as goal
     };
-  }, [getTotalIncome, getTotalExpenses]);
+  }, [getTotalIncome, getTotalExpenses, getTotalDebt, getTotalMonthlyPayments, getTotalMonthlyExpensesFromSupabase]);
 
   // Get recent transactions (last 5)
   const recentTransactions = useMemo(() => 
