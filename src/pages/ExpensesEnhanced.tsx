@@ -505,7 +505,7 @@ const ExpensesEnhanced = () => {
                           </div>
                           {expense.nextDueDate && (
                             <div className="text-xs text-muted-foreground">
-                              Next: {expense.nextDueDate.toLocaleDateString()}
+                              Next: {new Date(expense.nextDueDate).toLocaleDateString()}
                             </div>
                           )}
                         </div>
