@@ -1,25 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, ArrowLeft, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import QRCode from "qrcode";
+import { useFinance } from "@/contexts/FinanceContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FinancialSnapshot = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const { getTotalIncome, getTotalExpenses } = useFinance();
+  const { user } = useAuth();
 
-  // Mock user ID - in a real app this would come from auth
-  const userId = "oNU1JPSpeFYi...";
-  
-  // Get current year data - this would typically come from a database
+  // Get current year data
   const currentYear = new Date().getFullYear();
   
-  // Mock data - in a real app this would be fetched from the same database as Budget Planner
-  const [financialData, setFinancialData] = useState({
-    totalIncome: 0,
-    totalExpenses: 0,
-    netSavings: 0
-  });
+  // Calculate financial data from context - real data instead of mock
+  const financialData = useMemo(() => {
+    const totalIncome = getTotalIncome();
+    const totalExpenses = getTotalExpenses();
+    
+    return {
+      totalIncome,
+      totalExpenses,
+      netSavings: totalIncome - totalExpenses
+    };
+  }, [getTotalIncome, getTotalExpenses]);
 
   useEffect(() => {
     // Generate QR code for the current page URL
@@ -34,15 +40,6 @@ const FinancialSnapshot = () => {
     })
       .then(url => setQrCodeUrl(url))
       .catch(err => console.error('Error generating QR code:', err));
-
-    // In a real app, this would fetch data from your database
-    // For now, we'll simulate some data
-    const mockData = {
-      totalIncome: 0,
-      totalExpenses: 0,
-      netSavings: 0
-    };
-    setFinancialData(mockData);
   }, []);
 
   const formatCurrency = (amount: number) => {
@@ -80,7 +77,7 @@ const FinancialSnapshot = () => {
           </Link>
           
           <h1 className="text-2xl font-bold text-white mb-2">Financial Snapshot</h1>
-          <p className="text-sm text-slate-400">User ID: {userId}</p>
+          <p className="text-sm text-slate-400">User: {user?.email || 'Guest'}</p>
         </div>
 
         {/* Annual Overview */}
