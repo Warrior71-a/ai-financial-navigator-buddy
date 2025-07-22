@@ -171,8 +171,9 @@ const Loans = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link to="/">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
             </Button>
           </Link>
           <div>
