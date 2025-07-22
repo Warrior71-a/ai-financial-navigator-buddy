@@ -81,8 +81,8 @@ const Income = () => {
   };
 
   const totalMonthlyIncome = incomes
-    .filter((income: IncomeType) => income.isActive)
-    .reduce((total: number, income: IncomeType) => {
+    .filter((income: any) => income.is_active)
+    .reduce((total: number, income: any) => {
       const multiplier = income.frequency === 'weekly' ? 4.33 
         : income.frequency === 'monthly' ? 1 
         : income.frequency === 'yearly' ? 1/12 
@@ -90,7 +90,7 @@ const Income = () => {
         : income.frequency === 'bi-weekly' ? 2.17
         : income.frequency === 'one-time' ? 0
         : 1;
-      return total + (income.amount * multiplier);
+      return total + (Number(income.amount) * multiplier);
     }, 0);
 
   if (loading) {
@@ -167,12 +167,12 @@ const Income = () => {
         <DataCard
           title="Total Monthly Income"
           value={`$${totalMonthlyIncome.toFixed(2)}`}
-          subtitle={`From ${incomes.filter((i: IncomeType) => i.isActive).length} active source(s)`}
+          subtitle={`From ${incomes.filter((i: any) => i.is_active).length} active source(s)`}
           icon={DollarSign}
         />
         <DataCard
           title="Active Sources"
-          value={incomes.filter((i: IncomeType) => i.isActive).length}
+          value={incomes.filter((i: any) => i.is_active).length}
         />
         <DataCard
           title="Total Sources"
@@ -205,7 +205,7 @@ const Income = () => {
                         <Badge variant="secondary" className={getFrequencyColor(income.frequency)}>
                           {income.frequency}
                         </Badge>
-                        {!income.isActive && (
+                        {!(income as any).is_active && (
                           <Badge variant="secondary" className="bg-gray-100 text-gray-800">
                             Inactive
                           </Badge>
@@ -228,7 +228,7 @@ const Income = () => {
                           source: income.source,
                           amount: income.amount.toString(),
                           frequency: income.frequency,
-                          isActive: income.isActive
+                          isActive: (income as any).is_active
                         } as any)}
                       >
                         <Edit className="h-4 w-4" />
