@@ -156,7 +156,7 @@ const ExpensesSimplified = () => {
                       {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
                         <SelectItem key={key} value={key}>
                           <div className="flex items-center gap-2">
-                            <config.icon className="h-4 w-4" />
+                             {React.createElement(config.icon, { className: "h-4 w-4" })}
                             {config.label}
                           </div>
                         </SelectItem>

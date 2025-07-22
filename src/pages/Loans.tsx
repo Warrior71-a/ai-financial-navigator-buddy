@@ -49,6 +49,8 @@ const LoansSimplified = () => {
     monthlyPayment: "",
     term: "",
     remainingTerm: "",
+    dueDate: "",
+    nextDueDate: "",
   };
 
   const handleSubmit = async (formData: typeof initialFormData, isEditing: boolean) => {
@@ -72,11 +74,11 @@ const LoansSimplified = () => {
       monthlyPayment: parseFloat(formData.monthlyPayment),
       term: parseInt(formData.term),
       remainingTerm: parseInt(formData.remainingTerm),
-      dueDate: new Date().toISOString().split('T')[0],
-      nextDueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(),
+      nextDueDate: new Date(),
       isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     let updatedLoans;
