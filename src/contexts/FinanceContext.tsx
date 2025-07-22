@@ -207,6 +207,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .eq('user_id', user.id);
 
         if (error) throw error;
+        console.log('🔄 Loaded Supabase expenses:', data);
         setSupabaseExpenses(data || []);
       } catch (error) {
         console.error('Error loading Supabase expenses:', error);
@@ -227,6 +228,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Load persisted transactions on mount
   React.useEffect(() => {
+    console.log('📝 Loading persisted transactions:', persistedTransactions);
     if (persistedTransactions.length > 0) {
       dispatch({ type: 'LOAD_TRANSACTIONS', payload: persistedTransactions });
     }
