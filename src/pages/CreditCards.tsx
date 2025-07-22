@@ -173,8 +173,9 @@ const CreditCards = () => {
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <Link to="/">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
             </Button>
           </Link>
           <div>
