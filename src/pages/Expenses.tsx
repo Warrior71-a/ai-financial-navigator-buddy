@@ -38,7 +38,9 @@ const Expenses = () => {
   const loadExpenses = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
       if (!user) {
+        console.log('No user found, not loading expenses');
         setLoading(false);
         return;
       }
