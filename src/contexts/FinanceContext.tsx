@@ -296,15 +296,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [loans]);
 
   const getTotalMonthlyExpensesFromSupabase = useCallback(() => {
-    return supabaseExpenses
+    console.log('Calculating Supabase expenses:', supabaseExpenses);
+    const total = supabaseExpenses
       .filter(expense => expense.is_active)
       .reduce((total, expense) => {
         const multiplier = expense.frequency === 'weekly' ? 4.33 
           : expense.frequency === 'monthly' ? 1 
           : expense.frequency === 'annually' ? 1/12 
           : 1;
-        return total + (expense.amount * multiplier);
+        const expenseAmount = Number(expense.amount) * multiplier;
+        console.log(`Expense: ${expense.name}, Amount: ${expense.amount}, Frequency: ${expense.frequency}, Multiplier: ${multiplier}, Monthly: ${expenseAmount}`);
+        return total + expenseAmount;
       }, 0);
+    console.log('Total monthly expenses from Supabase:', total);
+    return total;
   }, [supabaseExpenses]);
 
   const contextValue: FinanceContextType = {
