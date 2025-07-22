@@ -31,9 +31,7 @@ const Index = () => {
   // Calculate financial data from context
   const financialData = useMemo(() => {
     const totalIncome = getTotalIncome();
-    const transactionExpenses = getTotalExpenses();
-    const supabaseExpenses = getTotalMonthlyExpensesFromSupabase();
-    const totalExpenses = transactionExpenses + supabaseExpenses;
+    const totalExpenses = getTotalMonthlyExpensesFromSupabase(); // Only use Supabase expenses
     const totalDebt = getTotalDebt();
     const monthlyPayments = getTotalMonthlyPayments();
     const totalCreditLimit = getTotalCreditLimit();
@@ -50,7 +48,7 @@ const Index = () => {
       emergencyFund: 0, // TODO: Add emergency fund tracking
       emergencyFundGoal: totalIncome * 3, // 3 months of income as goal
     };
-  }, [getTotalIncome, getTotalExpenses, getTotalDebt, getTotalMonthlyPayments, getTotalMonthlyExpensesFromSupabase, getTotalCreditLimit, getCreditUtilization]);
+  }, [getTotalIncome, getTotalMonthlyExpensesFromSupabase, getTotalDebt, getTotalMonthlyPayments, getTotalCreditLimit, getCreditUtilization]);
 
   // Get recent transactions (last 5)
   const recentTransactions = useMemo(() => 

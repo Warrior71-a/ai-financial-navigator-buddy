@@ -207,7 +207,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .eq('user_id', user.id);
 
         if (error) throw error;
-        console.log('🔄 Loaded Supabase expenses:', data);
         setSupabaseExpenses(data || []);
       } catch (error) {
         console.error('Error loading Supabase expenses:', error);
@@ -228,7 +227,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Load persisted transactions on mount
   React.useEffect(() => {
-    console.log('📝 Loading persisted transactions:', persistedTransactions);
     if (persistedTransactions.length > 0) {
       dispatch({ type: 'LOAD_TRANSACTIONS', payload: persistedTransactions });
     }
@@ -336,21 +334,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [loans]);
 
   const getTotalMonthlyExpensesFromSupabase = useCallback(() => {
-    console.log('📊 Calculating monthly expenses from Supabase data:', supabaseExpenses);
-    const total = supabaseExpenses
+    return supabaseExpenses
       .filter(expense => expense.is_active)
       .reduce((total, expense) => {
         const multiplier = expense.frequency === 'weekly' ? 4.33 
           : expense.frequency === 'monthly' ? 1 
           : expense.frequency === 'annually' ? 1/12 
           : 1;
-        const amount = Number(expense.amount);
-        const monthlyAmount = amount * multiplier;
-        console.log(`  ${expense.name}: $${amount} (${expense.frequency}) → $${monthlyAmount.toFixed(2)} monthly`);
-        return total + monthlyAmount;
+        return total + (Number(expense.amount) * multiplier);
       }, 0);
-    console.log('💰 Total monthly expenses:', total);
-    return total;
   }, [supabaseExpenses]);
 
   // Credit card methods
