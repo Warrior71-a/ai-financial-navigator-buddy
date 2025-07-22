@@ -22,7 +22,10 @@ const Index = () => {
     getNetCashFlow, 
     getTotalDebt, 
     getTotalMonthlyPayments,
-    getTotalMonthlyExpensesFromSupabase 
+    getTotalMonthlyExpensesFromSupabase,
+    getTotalCreditLimit,
+    getTotalCreditBalance,
+    getCreditUtilization
   } = useFinance();
   
   // Calculate financial data from context
@@ -33,19 +36,21 @@ const Index = () => {
     const totalExpenses = transactionExpenses + supabaseExpenses;
     const totalDebt = getTotalDebt();
     const monthlyPayments = getTotalMonthlyPayments();
+    const totalCreditLimit = getTotalCreditLimit();
+    const creditUtilization = getCreditUtilization();
     
     return {
       totalIncome,
       totalExpenses,
       totalDebt,
-      totalCreditLimit: 0, // TODO: Add credit tracking
-      creditUtilization: 0, // TODO: Add credit utilization tracking
+      totalCreditLimit,
+      creditUtilization,
       netWorth: totalIncome - totalExpenses - totalDebt, // More accurate calculation
       monthlyPayments,
       emergencyFund: 0, // TODO: Add emergency fund tracking
       emergencyFundGoal: totalIncome * 3, // 3 months of income as goal
     };
-  }, [getTotalIncome, getTotalExpenses, getTotalDebt, getTotalMonthlyPayments, getTotalMonthlyExpensesFromSupabase]);
+  }, [getTotalIncome, getTotalExpenses, getTotalDebt, getTotalMonthlyPayments, getTotalMonthlyExpensesFromSupabase, getTotalCreditLimit, getCreditUtilization]);
 
   // Get recent transactions (last 5)
   const recentTransactions = useMemo(() => 

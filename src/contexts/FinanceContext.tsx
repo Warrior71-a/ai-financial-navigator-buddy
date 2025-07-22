@@ -99,6 +99,10 @@ interface FinanceContextType {
   getTotalDebt: () => number;
   getTotalMonthlyPayments: () => number;
   getTotalMonthlyExpensesFromSupabase: () => number;
+  // Credit card methods
+  getTotalCreditLimit: () => number;
+  getTotalCreditBalance: () => number;
+  getCreditUtilization: () => number;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -106,6 +110,7 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
   const [supabaseExpenses, setSupabaseExpenses] = React.useState<any[]>([]);
+  const [creditCards, setCreditCards] = React.useState<any[]>([]);
   
   const { value: persistedTransactions, setValue: setPersistedTransactions } = 
     useLocalStorageWithErrorRecovery<Transaction[]>('finance-transactions', [], {
@@ -153,6 +158,39 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('loansUpdated', handleLoansUpdate);
+    };
+  }, []);
+
+  // Load credit cards from localStorage with listener for changes
+  React.useEffect(() => {
+    const loadCreditCards = () => {
+      try {
+        const saved = localStorage.getItem('credit-cards');
+        setCreditCards(saved ? JSON.parse(saved) : []);
+      } catch {
+        setCreditCards([]);
+      }
+    };
+
+    // Load initial credit cards
+    loadCreditCards();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'credit-cards') {
+        loadCreditCards();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleCreditCardsUpdate = () => loadCreditCards();
+    window.addEventListener('creditCardsUpdated', handleCreditCardsUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('creditCardsUpdated', handleCreditCardsUpdate);
     };
   }, []);
 
@@ -296,21 +334,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [loans]);
 
   const getTotalMonthlyExpensesFromSupabase = useCallback(() => {
-    console.log('Calculating Supabase expenses:', supabaseExpenses);
-    const total = supabaseExpenses
+    return supabaseExpenses
       .filter(expense => expense.is_active)
       .reduce((total, expense) => {
         const multiplier = expense.frequency === 'weekly' ? 4.33 
           : expense.frequency === 'monthly' ? 1 
           : expense.frequency === 'annually' ? 1/12 
           : 1;
-        const expenseAmount = Number(expense.amount) * multiplier;
-        console.log(`Expense: ${expense.name}, Amount: ${expense.amount}, Frequency: ${expense.frequency}, Multiplier: ${multiplier}, Monthly: ${expenseAmount}`);
-        return total + expenseAmount;
+        return total + (Number(expense.amount) * multiplier);
       }, 0);
-    console.log('Total monthly expenses from Supabase:', total);
-    return total;
   }, [supabaseExpenses]);
+
+  // Credit card methods
+  const getTotalCreditLimit = useCallback(() => {
+    return creditCards.reduce((sum, card) => sum + (card.creditLimit || 0), 0);
+  }, [creditCards]);
+
+  const getTotalCreditBalance = useCallback(() => {
+    return creditCards.reduce((sum, card) => sum + (card.currentBalance || 0), 0);
+  }, [creditCards]);
+
+  const getCreditUtilization = useCallback(() => {
+    const totalLimit = getTotalCreditLimit();
+    const totalBalance = getTotalCreditBalance();
+    return totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
+  }, [getTotalCreditLimit, getTotalCreditBalance]);
 
   const contextValue: FinanceContextType = {
     state,
@@ -327,7 +375,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     getCategories,
     getTotalDebt,
     getTotalMonthlyPayments,
-    getTotalMonthlyExpensesFromSupabase
+    getTotalMonthlyExpensesFromSupabase,
+    getTotalCreditLimit,
+    getTotalCreditBalance,
+    getCreditUtilization
   };
 
   return (
