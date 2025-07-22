@@ -43,7 +43,14 @@ const CreditCards = () => {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEYS.CREDIT_CARDS);
     if (stored) {
-      setCreditCards(JSON.parse(stored));
+      const cards = JSON.parse(stored).map((card: any) => ({
+        ...card,
+        dueDate: new Date(card.dueDate),
+        nextDueDate: new Date(card.nextDueDate),
+        createdAt: new Date(card.createdAt),
+        updatedAt: new Date(card.updatedAt),
+      }));
+      setCreditCards(cards);
     }
   }, []);
 
