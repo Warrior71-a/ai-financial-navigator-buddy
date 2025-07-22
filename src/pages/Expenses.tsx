@@ -88,8 +88,8 @@ const ExpensesSimplified = () => {
   };
 
   const totalMonthlyExpenses = expenses
-    .filter((expense: Expense) => expense.isActive)
-    .reduce((total: number, expense: Expense) => {
+    .filter((expense: any) => expense.is_active)
+    .reduce((total: number, expense: any) => {
       const multiplier = expense.frequency === 'weekly' ? 4.33 
         : expense.frequency === 'monthly' ? 1 
         : expense.frequency === 'annually' ? 1/12 
@@ -98,7 +98,7 @@ const ExpensesSimplified = () => {
         : expense.frequency === 'semi-annually' ? 2
         : expense.frequency === 'daily' ? 30.4
         : 1;
-      return total + (expense.amount * multiplier);
+      return total + (Number(expense.amount) * multiplier);
     }, 0);
 
   if (loading) {
@@ -204,12 +204,12 @@ const ExpensesSimplified = () => {
         <DataCard
           title="Total Monthly"
           value={`$${totalMonthlyExpenses.toFixed(2)}`}
-          subtitle={`Based on ${expenses.filter((e: Expense) => e.isActive).length} active expense(s)`}
+          subtitle={`Based on ${expenses.filter((e: any) => e.is_active).length} active expense(s)`}
           icon={TrendingDown}
         />
         <DataCard
           title="Active Expenses"
-          value={expenses.filter((e: Expense) => e.isActive).length}
+          value={expenses.filter((e: any) => e.is_active).length}
           icon={Calendar}
         />
         <DataCard
