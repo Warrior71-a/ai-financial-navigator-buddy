@@ -334,15 +334,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [loans]);
 
   const getTotalMonthlyExpensesFromSupabase = useCallback(() => {
-    return supabaseExpenses
+    console.log('📊 Calculating monthly expenses from Supabase data:', supabaseExpenses);
+    const total = supabaseExpenses
       .filter(expense => expense.is_active)
       .reduce((total, expense) => {
         const multiplier = expense.frequency === 'weekly' ? 4.33 
           : expense.frequency === 'monthly' ? 1 
           : expense.frequency === 'annually' ? 1/12 
           : 1;
-        return total + (Number(expense.amount) * multiplier);
+        const amount = Number(expense.amount);
+        const monthlyAmount = amount * multiplier;
+        console.log(`  ${expense.name}: $${amount} (${expense.frequency}) → $${monthlyAmount.toFixed(2)} monthly`);
+        return total + monthlyAmount;
       }, 0);
+    console.log('💰 Total monthly expenses:', total);
+    return total;
   }, [supabaseExpenses]);
 
   // Credit card methods
