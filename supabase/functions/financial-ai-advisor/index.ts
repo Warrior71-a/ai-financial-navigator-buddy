@@ -13,21 +13,40 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Financial AI Advisor function called');
+    
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    console.log('API key available:', !!GEMINI_API_KEY);
+    
     if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not set');
+      console.error('GEMINI_API_KEY is not set');
+      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const { financialData } = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body received:', !!requestBody.financialData);
+    
+    const { financialData } = requestBody;
+    
+    if (!financialData) {
+      console.error('No financial data provided');
+      return new Response(JSON.stringify({ error: 'Financial data is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-      }).format(amount);
+      }).format(amount || 0);
     };
 
-    const monthlyBalance = financialData.totalIncome - financialData.totalExpenses;
+    const monthlyBalance = (financialData.totalIncome || 0) - (financialData.totalExpenses || 0);
     
     const prompt = `As a financial advisor, analyze this person's financial situation and provide specific debt payoff strategies:
 
@@ -37,7 +56,7 @@ Monthly Balance: ${formatCurrency(monthlyBalance)}
 Total Debt: ${formatCurrency(financialData.totalDebt)}
 Monthly Debt Payments: ${formatCurrency(financialData.monthlyPayments)}
 Emergency Fund: ${formatCurrency(financialData.emergencyFund)}
-Credit Utilization: ${financialData.creditUtilization}%
+Credit Utilization: ${financialData.creditUtilization || 0}%
 
 Please provide:
 1. Best debt payoff strategy (avalanche vs snowball)
@@ -45,8 +64,10 @@ Please provide:
 3. Risk assessment and warnings
 4. 3-5 specific next steps
 
-Keep responses concise and actionable. Format as JSON with keys: debtStrategy, budgetOptimization, riskAssessment, nextSteps (array).`;
+Keep responses concise and actionable.`;
 
+    console.log('Making request to Gemini API');
+    
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -61,36 +82,59 @@ Keep responses concise and actionable. Format as JSON with keys: debtStrategy, b
       }),
     });
 
+    console.log('Gemini API response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      return new Response(JSON.stringify({ error: `Gemini API error: ${response.status} - ${errorText}` }), {
+        status: response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
-    const analysisText = data.candidates[0].content.parts[0].text;
+    console.log('Gemini API response received');
     
-    // Try to parse as JSON first, fallback to text parsing
-    let advice;
-    try {
-      advice = JSON.parse(analysisText);
-    } catch {
-      // Parse the response into structured advice
-      const sections = analysisText.split(/\d\./);
-      
-      advice = {
-        debtStrategy: sections[1]?.trim() || "Focus on high-interest debt first",
-        budgetOptimization: sections[2]?.trim() || "Review monthly subscriptions and discretionary spending",
-        riskAssessment: sections[3]?.trim() || "Build emergency fund to 3-6 months expenses",
-        nextSteps: sections[4]?.split('\n').filter(step => step.trim()).slice(0, 5) || ["Create a debt payoff plan", "Track expenses monthly"]
-      };
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error('Invalid response structure from Gemini API');
+      return new Response(JSON.stringify({ error: 'Invalid response from AI service' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+    
+    const analysisText = data.candidates[0].content.parts[0].text;
+    console.log('Analysis text length:', analysisText?.length);
+    
+    // Parse the response into structured advice
+    const sections = analysisText.split(/\d\./);
+    
+    const advice = {
+      debtStrategy: sections[1]?.trim() || "Focus on paying off high-interest debt first using the debt avalanche method.",
+      budgetOptimization: sections[2]?.trim() || "Review monthly subscriptions and discretionary spending to find savings opportunities.",
+      riskAssessment: sections[3]?.trim() || "Build an emergency fund covering 3-6 months of expenses to protect against unexpected costs.",
+      nextSteps: sections[4]?.split('\n').filter(step => step.trim()).slice(0, 5) || [
+        "Create a detailed debt payoff plan",
+        "Track all monthly expenses", 
+        "Set up automatic savings",
+        "Review insurance coverage",
+        "Consider increasing income sources"
+      ]
+    };
 
+    console.log('Successfully processed AI advice');
+    
     return new Response(JSON.stringify({ advice }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error in financial-ai-advisor function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: `Function error: ${error.message}`,
+      details: error.stack 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
