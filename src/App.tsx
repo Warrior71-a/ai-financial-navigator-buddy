@@ -10,7 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
-import ExpensesEnhanced from "./pages/ExpensesEnhanced";
+import Expenses from "./pages/Expenses";
 import CreditCards from "./pages/CreditCards";
 import Loans from "./pages/Loans";
 import BudgetPlanner from "./pages/BudgetPlanner";
@@ -39,7 +39,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
-            <Route path="/expenses" element={<ProtectedRoute><ExpensesEnhanced /></ProtectedRoute>} />
+            <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
             <Route path="/credit-cards" element={<ProtectedRoute><CreditCards /></ProtectedRoute>} />
             <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
             <Route path="/budget-planner" element={<ProtectedRoute><BudgetPlanner /></ProtectedRoute>} />
