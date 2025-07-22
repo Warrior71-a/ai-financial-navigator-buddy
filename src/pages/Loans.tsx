@@ -32,7 +32,7 @@ const loanTypeColors = {
   other: "bg-gray-500",
 };
 
-const LoansSimplified = () => {
+const Loans = () => {
   const [loans, setLoans] = React.useState<Loan[]>(() => {
     const saved = localStorage.getItem('loans');
     return saved ? JSON.parse(saved) : [];
@@ -413,4 +413,4 @@ const LoansSimplified = () => {
   );
 };
 
-export default LoansSimplified;
+export default Loans;

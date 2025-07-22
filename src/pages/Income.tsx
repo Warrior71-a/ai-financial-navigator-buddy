@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Income as IncomeType, IncomeFrequency } from '@/types/finance';
 
-const IncomeSimplified = () => {
+const Income = () => {
   const { addTransaction } = useFinance();
   const { data: incomes, loading, insertData, updateData, deleteData } = useSupabaseData({
     tableName: 'incomes',
@@ -252,4 +252,4 @@ const IncomeSimplified = () => {
   );
 };
 
-export default IncomeSimplified;
+export default Income;
