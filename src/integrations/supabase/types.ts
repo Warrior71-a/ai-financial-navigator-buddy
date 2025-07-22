@@ -139,6 +139,7 @@ export type Database = {
         | "healthcare"
         | "shopping"
         | "other"
+        | "debt"
       expense_frequency: "weekly" | "monthly" | "yearly"
       income_frequency:
         | "weekly"
@@ -284,6 +285,7 @@ export const Constants = {
         "healthcare",
         "shopping",
         "other",
+        "debt",
       ],
       expense_frequency: ["weekly", "monthly", "yearly"],
       income_frequency: [
