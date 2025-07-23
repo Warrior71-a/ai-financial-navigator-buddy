@@ -366,7 +366,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const totalBalance = getTotalCreditBalance();
     console.log('Credit utilization calculation:', { totalLimit, totalBalance, creditCards });
     return totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
-  }, [getTotalCreditLimit, getTotalCreditBalance]);
+  }, [getTotalCreditLimit, getTotalCreditBalance, creditCards]);
 
   const contextValue: FinanceContextType = {
     state,
