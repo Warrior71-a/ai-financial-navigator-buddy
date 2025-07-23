@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
 import { useLocalStorageWithErrorRecovery } from '@/hooks/useLocalStorage';
 import { supabase } from '@/integrations/supabase/client';
@@ -99,10 +100,16 @@ interface FinanceContextType {
   getTotalDebt: () => number;
   getTotalMonthlyPayments: () => number;
   getTotalMonthlyExpensesFromSupabase: () => number;
+  getTotalMonthlyIncomeFromSupabase: () => number;
   // Credit card methods
   getTotalCreditLimit: () => number;
   getTotalCreditBalance: () => number;
   getCreditUtilization: () => number;
+  // Realtime data
+  supabaseExpenses: any[];
+  supabaseIncomes: any[];
+  loans: Loan[];
+  creditCards: any[];
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -110,7 +117,9 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
   const [supabaseExpenses, setSupabaseExpenses] = React.useState<any[]>([]);
+  const [supabaseIncomes, setSupabaseIncomes] = React.useState<any[]>([]);
   const [creditCards, setCreditCards] = React.useState<any[]>([]);
+  const [loans, setLoans] = React.useState<Loan[]>([]);
   
   const { value: persistedTransactions, setValue: setPersistedTransactions } = 
     useLocalStorageWithErrorRecovery<Transaction[]>('finance-transactions', [], {
@@ -126,109 +135,185 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         )
     });
 
-  // Get loans from localStorage with listener for changes
-  const [loans, setLoans] = React.useState<Loan[]>([]);
-  
+  // Load data from localStorage and set up realtime listeners
   React.useEffect(() => {
-    const loadLoans = () => {
+    const loadAllData = async () => {
+      console.log('Loading all data from localStorage and Supabase...');
+      
+      // Load loans
       try {
-        const saved = localStorage.getItem('loans');
-        setLoans(saved ? JSON.parse(saved) : []);
-      } catch {
+        const savedLoans = localStorage.getItem('loans');
+        const loansData = savedLoans ? JSON.parse(savedLoans) : [];
+        console.log('Loaded loans:', loansData);
+        setLoans(loansData);
+      } catch (error) {
+        console.error('Error loading loans:', error);
         setLoans([]);
       }
-    };
 
-    // Load initial loans
-    loadLoans();
-    
-    // Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'loans') {
-        loadLoans();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events (for same-tab updates)
-    const handleLoansUpdate = () => loadLoans();
-    window.addEventListener('loansUpdated', handleLoansUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('loansUpdated', handleLoansUpdate);
-    };
-  }, []);
-
-  // Load credit cards from localStorage with listener for changes
-  React.useEffect(() => {
-    const loadCreditCards = () => {
+      // Load credit cards
       try {
-        const saved = localStorage.getItem('credit-cards');
-        console.log('Loading credit cards from localStorage:', saved);
-        const parsedCards = saved ? JSON.parse(saved) : [];
-        console.log('Parsed credit cards:', parsedCards);
-        setCreditCards(parsedCards);
-      } catch {
-        console.log('Error loading credit cards, setting empty array');
+        const savedCards = localStorage.getItem('credit-cards');
+        const cardsData = savedCards ? JSON.parse(savedCards) : [];
+        console.log('Loaded credit cards:', cardsData);
+        setCreditCards(cardsData);
+      } catch (error) {
+        console.error('Error loading credit cards:', error);
         setCreditCards([]);
       }
+
+      // Load Supabase data
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          console.log('Loading Supabase data for user:', user.id);
+          
+          // Load expenses
+          const { data: expensesData, error: expensesError } = await supabase
+            .from('expenses')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (expensesError) {
+            console.error('Error loading expenses:', expensesError);
+          } else {
+            console.log('Loaded expenses from Supabase:', expensesData);
+            setSupabaseExpenses(expensesData || []);
+          }
+
+          // Load incomes
+          const { data: incomesData, error: incomesError } = await supabase
+            .from('incomes')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (incomesError) {
+            console.error('Error loading incomes:', incomesError);
+          } else {
+            console.log('Loaded incomes from Supabase:', incomesData);
+            setSupabaseIncomes(incomesData || []);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Supabase data:', error);
+      }
     };
 
-    // Load initial credit cards
-    loadCreditCards();
-    
-    // Listen for storage changes
+    loadAllData();
+  }, []);
+
+  // Set up realtime listeners for Supabase tables
+  React.useEffect(() => {
+    const channel = supabase
+      .channel('finance_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'expenses'
+        },
+        (payload) => {
+          console.log('Expenses realtime update:', payload);
+          // Reload expenses data
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              supabase
+                .from('expenses')
+                .select('*')
+                .eq('user_id', user.id)
+                .then(({ data, error }) => {
+                  if (!error) {
+                    setSupabaseExpenses(data || []);
+                  }
+                });
+            }
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'incomes'
+        },
+        (payload) => {
+          console.log('Incomes realtime update:', payload);
+          // Reload incomes data
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              supabase
+                .from('incomes')
+                .select('*')
+                .eq('user_id', user.id)
+                .then(({ data, error }) => {
+                  if (!error) {
+                    setSupabaseIncomes(data || []);
+                  }
+                });
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Listen for localStorage changes
+  React.useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'credit-cards') {
-        loadCreditCards();
+      if (e.key === 'loans') {
+        try {
+          const newLoans = e.newValue ? JSON.parse(e.newValue) : [];
+          console.log('Loans updated via storage event:', newLoans);
+          setLoans(newLoans);
+        } catch (error) {
+          console.error('Error parsing loans from storage:', error);
+        }
+      } else if (e.key === 'credit-cards') {
+        try {
+          const newCards = e.newValue ? JSON.parse(e.newValue) : [];
+          console.log('Credit cards updated via storage event:', newCards);
+          setCreditCards(newCards);
+        } catch (error) {
+          console.error('Error parsing credit cards from storage:', error);
+        }
+      }
+    };
+
+    const handleCustomEvents = (e: CustomEvent) => {
+      console.log('Custom event received:', e.type, e.detail);
+      if (e.type === 'loansUpdated') {
+        try {
+          const savedLoans = localStorage.getItem('loans');
+          const loansData = savedLoans ? JSON.parse(savedLoans) : [];
+          setLoans(loansData);
+        } catch (error) {
+          console.error('Error loading loans on custom event:', error);
+        }
+      } else if (e.type === 'creditCardsUpdated') {
+        try {
+          const savedCards = localStorage.getItem('credit-cards');
+          const cardsData = savedCards ? JSON.parse(savedCards) : [];
+          setCreditCards(cardsData);
+        } catch (error) {
+          console.error('Error loading credit cards on custom event:', error);
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events (for same-tab updates)
-    const handleCreditCardsUpdate = () => {
-      console.log('creditCardsUpdated event received, reloading data...');
-      loadCreditCards();
-    };
-    window.addEventListener('creditCardsUpdated', handleCreditCardsUpdate);
+    window.addEventListener('loansUpdated', handleCustomEvents as EventListener);
+    window.addEventListener('creditCardsUpdated', handleCustomEvents as EventListener);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('creditCardsUpdated', handleCreditCardsUpdate);
-    };
-  }, []);
-
-  // Load Supabase expenses
-  React.useEffect(() => {
-    const loadSupabaseExpenses = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setSupabaseExpenses(data || []);
-      } catch (error) {
-        console.error('Error loading Supabase expenses:', error);
-      }
-    };
-
-    // Load initial expenses
-    loadSupabaseExpenses();
-    
-    // Listen for expense updates
-    const handleExpensesUpdate = () => loadSupabaseExpenses();
-    window.addEventListener('expensesUpdated', handleExpensesUpdate);
-
-    return () => {
-      window.removeEventListener('expensesUpdated', handleExpensesUpdate);
+      window.removeEventListener('loansUpdated', handleCustomEvents as EventListener);
+      window.removeEventListener('creditCardsUpdated', handleCustomEvents as EventListener);
     };
   }, []);
 
@@ -331,7 +416,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return categories.sort();
   }, [state.transactions]);
 
-  // New methods for enhanced dashboard data
+  // Enhanced methods for dashboard data
   const getTotalDebt = useCallback(() => {
     return loans.reduce((sum: number, loan: Loan) => sum + loan.currentBalance, 0);
   }, [loans]);
@@ -352,6 +437,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }, 0);
   }, [supabaseExpenses]);
 
+  const getTotalMonthlyIncomeFromSupabase = useCallback(() => {
+    return supabaseIncomes
+      .filter(income => income.is_active)
+      .reduce((total, income) => {
+        const multiplier = income.frequency === 'weekly' ? 4.33 
+          : income.frequency === 'monthly' ? 1 
+          : income.frequency === 'yearly' ? 1/12 
+          : income.frequency === 'quarterly' ? 4
+          : income.frequency === 'bi-weekly' ? 2.17
+          : income.frequency === 'one-time' ? 0
+          : 1;
+        return total + (Number(income.amount) * multiplier);
+      }, 0);
+  }, [supabaseIncomes]);
+
   // Credit card methods
   const getTotalCreditLimit = useCallback(() => {
     return creditCards.reduce((sum, card) => sum + (card.creditLimit || 0), 0);
@@ -364,9 +464,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCreditUtilization = useCallback(() => {
     const totalLimit = getTotalCreditLimit();
     const totalBalance = getTotalCreditBalance();
-    console.log('Credit utilization calculation:', { totalLimit, totalBalance, creditCards });
     return totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
-  }, [getTotalCreditLimit, getTotalCreditBalance, creditCards]);
+  }, [getTotalCreditLimit, getTotalCreditBalance]);
 
   const contextValue: FinanceContextType = {
     state,
@@ -384,9 +483,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     getTotalDebt,
     getTotalMonthlyPayments,
     getTotalMonthlyExpensesFromSupabase,
+    getTotalMonthlyIncomeFromSupabase,
     getTotalCreditLimit,
     getTotalCreditBalance,
-    getCreditUtilization
+    getCreditUtilization,
+    supabaseExpenses,
+    supabaseIncomes,
+    loans,
+    creditCards
   };
 
   return (

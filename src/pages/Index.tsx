@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plus, TrendingUp, TrendingDown, CreditCard, Building2, DollarSign, PiggyBank, AlertTriangle, Share2, LogOut } from "lucide-react";
@@ -23,26 +24,40 @@ const Index = () => {
     getTotalDebt, 
     getTotalMonthlyPayments,
     getTotalMonthlyExpensesFromSupabase,
+    getTotalMonthlyIncomeFromSupabase,
     getTotalCreditLimit,
     getTotalCreditBalance,
-    getCreditUtilization
+    getCreditUtilization,
+    supabaseExpenses,
+    supabaseIncomes,
+    loans,
+    creditCards
   } = useFinance();
   
-  // Calculate financial data from context
+  // Calculate financial data from context with realtime updates
   const financialData = useMemo(() => {
-    const totalIncome = getTotalIncome();
-    const totalExpenses = getTotalMonthlyExpensesFromSupabase(); // Only use Supabase expenses
+    // Use Supabase income data instead of localStorage transactions
+    const totalIncome = getTotalMonthlyIncomeFromSupabase();
+    const totalExpenses = getTotalMonthlyExpensesFromSupabase();
     const totalDebt = getTotalDebt();
     const monthlyPayments = getTotalMonthlyPayments();
     const totalCreditLimit = getTotalCreditLimit();
+    const totalCreditBalance = getTotalCreditBalance();
     const creditUtilization = getCreditUtilization();
     
-    console.log('Dashboard financial data:', {
+    console.log('Dashboard financial data (realtime):', {
       totalIncome,
       totalExpenses,
       totalDebt,
       totalCreditLimit,
-      creditUtilization
+      totalCreditBalance,
+      creditUtilization,
+      dataStats: {
+        expensesCount: supabaseExpenses.length,
+        incomesCount: supabaseIncomes.length,
+        loansCount: loans.length,
+        creditCardsCount: creditCards.length
+      }
     });
     
     return {
@@ -50,13 +65,26 @@ const Index = () => {
       totalExpenses,
       totalDebt,
       totalCreditLimit,
+      totalCreditBalance,
       creditUtilization,
-      netWorth: totalIncome - totalExpenses - totalDebt, // More accurate calculation
+      netWorth: totalIncome - totalExpenses - totalDebt,
       monthlyPayments,
       emergencyFund: 0, // TODO: Add emergency fund tracking
       emergencyFundGoal: totalIncome * 3, // 3 months of income as goal
     };
-  }, [getTotalIncome, getTotalMonthlyExpensesFromSupabase, getTotalDebt, getTotalMonthlyPayments, getTotalCreditLimit, getCreditUtilization]);
+  }, [
+    getTotalMonthlyIncomeFromSupabase,
+    getTotalMonthlyExpensesFromSupabase, 
+    getTotalDebt, 
+    getTotalMonthlyPayments, 
+    getTotalCreditLimit, 
+    getTotalCreditBalance,
+    getCreditUtilization,
+    supabaseExpenses,
+    supabaseIncomes,
+    loans,
+    creditCards
+  ]);
 
   // Get recent transactions (last 5)
   const recentTransactions = useMemo(() => 
@@ -130,7 +158,7 @@ const Index = () => {
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{formatCurrency(financialData.totalIncome)}</div>
               <p className="text-xs text-muted-foreground">
-                Active income sources
+                From {supabaseIncomes.filter(i => i.is_active).length} active source(s)
               </p>
             </CardContent>
           </Card>
@@ -143,7 +171,7 @@ const Index = () => {
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{formatCurrency(financialData.totalExpenses)}</div>
               <p className="text-xs text-muted-foreground">
-                Total monthly spending
+                From {supabaseExpenses.filter(e => e.is_active).length} active expense(s)
               </p>
             </CardContent>
           </Card>
@@ -203,7 +231,7 @@ const Index = () => {
                 <span>Credit Utilization</span>
               </CardTitle>
               <CardDescription>
-                Using {financialData.creditUtilization}% of available credit
+                Using {financialData.creditUtilization.toFixed(1)}% of available credit
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
