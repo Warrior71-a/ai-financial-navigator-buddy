@@ -37,6 +37,14 @@ const Index = () => {
     const totalCreditLimit = getTotalCreditLimit();
     const creditUtilization = getCreditUtilization();
     
+    console.log('Dashboard financial data:', {
+      totalIncome,
+      totalExpenses,
+      totalDebt,
+      totalCreditLimit,
+      creditUtilization
+    });
+    
     return {
       totalIncome,
       totalExpenses,

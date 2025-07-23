@@ -166,8 +166,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadCreditCards = () => {
       try {
         const saved = localStorage.getItem('credit-cards');
-        setCreditCards(saved ? JSON.parse(saved) : []);
+        console.log('Loading credit cards from localStorage:', saved);
+        const parsedCards = saved ? JSON.parse(saved) : [];
+        console.log('Parsed credit cards:', parsedCards);
+        setCreditCards(parsedCards);
       } catch {
+        console.log('Error loading credit cards, setting empty array');
         setCreditCards([]);
       }
     };
@@ -185,7 +189,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     window.addEventListener('storage', handleStorageChange);
     
     // Also listen for custom events (for same-tab updates)
-    const handleCreditCardsUpdate = () => loadCreditCards();
+    const handleCreditCardsUpdate = () => {
+      console.log('creditCardsUpdated event received, reloading data...');
+      loadCreditCards();
+    };
     window.addEventListener('creditCardsUpdated', handleCreditCardsUpdate);
 
     return () => {
@@ -357,6 +364,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCreditUtilization = useCallback(() => {
     const totalLimit = getTotalCreditLimit();
     const totalBalance = getTotalCreditBalance();
+    console.log('Credit utilization calculation:', { totalLimit, totalBalance, creditCards });
     return totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
   }, [getTotalCreditLimit, getTotalCreditBalance]);
 

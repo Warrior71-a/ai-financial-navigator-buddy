@@ -56,8 +56,10 @@ const CreditCards = () => {
 
   const saveToLocalStorage = (cards: CreditCard[]) => {
     localStorage.setItem(STORAGE_KEYS.CREDIT_CARDS, JSON.stringify(cards));
+    console.log('Credit cards saved to localStorage:', cards);
     // Dispatch event to notify other components of the update
     window.dispatchEvent(new Event('creditCardsUpdated'));
+    console.log('creditCardsUpdated event dispatched');
   };
 
   const resetForm = () => {
