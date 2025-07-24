@@ -151,12 +151,36 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setLoans([]);
       }
 
-      // Load credit cards
+      // Load credit cards from Supabase
       try {
-        const savedCards = localStorage.getItem('credit-cards');
-        const cardsData = savedCards ? JSON.parse(savedCards) : [];
-        console.log('Loaded credit cards:', cardsData);
-        setCreditCards(cardsData);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: cardsData, error: cardsError } = await supabase
+            .from('credit_cards')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+
+          if (cardsError) {
+            console.error('Error loading credit cards:', cardsError);
+          } else {
+            const formattedCards = cardsData.map(card => ({
+              id: card.id,
+              name: card.name,
+              bank: card.bank,
+              currentBalance: Number(card.current_balance),
+              creditLimit: Number(card.credit_limit),
+              interestRate: Number(card.interest_rate),
+              dueDate: card.due_date,
+              minimumPayment: Number(card.minimum_payment),
+              isActive: card.is_active,
+              createdAt: card.created_at,
+              updatedAt: card.updated_at
+            }));
+            console.log('Loaded credit cards from Supabase:', formattedCards);
+            setCreditCards(formattedCards);
+          }
+        }
       } catch (error) {
         console.error('Error loading credit cards:', error);
         setCreditCards([]);
@@ -250,6 +274,45 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 .then(({ data, error }) => {
                   if (!error) {
                     setSupabaseIncomes(data || []);
+                  }
+                });
+            }
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'credit_cards'
+        },
+        (payload) => {
+          console.log('Credit cards realtime update:', payload);
+          // Reload credit cards data
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+              supabase
+                .from('credit_cards')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('is_active', true)
+                .then(({ data, error }) => {
+                  if (!error) {
+                    const formattedCards = data.map(card => ({
+                      id: card.id,
+                      name: card.name,
+                      bank: card.bank,
+                      currentBalance: Number(card.current_balance),
+                      creditLimit: Number(card.credit_limit),
+                      interestRate: Number(card.interest_rate),
+                      dueDate: card.due_date,
+                      minimumPayment: Number(card.minimum_payment),
+                      isActive: card.is_active,
+                      createdAt: card.created_at,
+                      updatedAt: card.updated_at
+                    }));
+                    setCreditCards(formattedCards);
                   }
                 });
             }

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_cards: {
+        Row: {
+          bank: string
+          created_at: string
+          credit_limit: number
+          current_balance: number
+          due_date: string
+          id: string
+          interest_rate: number
+          is_active: boolean
+          minimum_payment: number
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank: string
+          created_at?: string
+          credit_limit: number
+          current_balance?: number
+          due_date: string
+          id?: string
+          interest_rate: number
+          is_active?: boolean
+          minimum_payment: number
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank?: string
+          created_at?: string
+          credit_limit?: number
+          current_balance?: number
+          due_date?: string
+          id?: string
+          interest_rate?: number
+          is_active?: boolean
+          minimum_payment?: number
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
