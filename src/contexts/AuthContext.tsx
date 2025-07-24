@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { cleanupAuthState, sessionManager } from '@/lib/security';
 
 interface AuthContextType {
   user: User | null;
@@ -33,6 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Update session activity for authenticated users
+        if (session?.user) {
+          sessionManager.setLastActivity();
+        }
       }
     );
 
@@ -41,6 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Update session activity for authenticated users
+      if (session?.user) {
+        sessionManager.setLastActivity();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -73,12 +84,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       
+      // Clean up auth state thoroughly
+      cleanupAuthState();
+      
       await supabase.auth.signOut({ scope: 'global' });
       
       // Force page reload to ensure clean state
       window.location.href = '/auth';
     } catch (error) {
       console.error('Error signing out:', error);
+      // Clean up state even if sign out fails
+      cleanupAuthState();
       // Force redirect even if sign out fails
       window.location.href = '/auth';
     }

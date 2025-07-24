@@ -1,14 +1,20 @@
 import { z } from 'zod';
 import type { ExpenseCategory, ExpenseFrequency, ExpenseType, IncomeFrequency, LoanType, GoalType } from '@/types/finance';
+import { passwordSchema, emailSchema, sanitizeFinancialData } from '@/lib/security';
 
-// Expense Validation Schema
+// Authentication Validation Schemas
+export { passwordSchema, emailSchema } from '@/lib/security';
+
+// Expense Validation Schema  
 export const expenseSchema = z.object({
   name: z.string()
     .min(1, 'Expense name is required')
-    .max(100, 'Expense name must be less than 100 characters'),
+    .max(100, 'Expense name must be less than 100 characters')
+    .transform(sanitizeFinancialData.description),
   amount: z.number()
     .min(0.01, 'Amount must be greater than 0')
-    .max(1000000, 'Amount must be less than $1,000,000'),
+    .max(1000000, 'Amount must be less than $1,000,000')
+    .transform(sanitizeFinancialData.amount),
   category: z.string()
     .min(1, 'Category is required'),
   type: z.enum(['need', 'want'] as const, {
@@ -21,7 +27,7 @@ export const expenseSchema = z.object({
     invalid_type_error: 'Please enter a valid date'
   }),
   isRecurring: z.boolean(),
-  tags: z.string().optional()
+  tags: z.string().optional().transform((val) => val ? sanitizeFinancialData.description(val) : val)
 });
 
 // Income Validation Schema

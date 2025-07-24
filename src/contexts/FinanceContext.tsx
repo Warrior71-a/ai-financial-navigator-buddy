@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
-import { useLocalStorageWithErrorRecovery } from '@/hooks/useLocalStorage';
+import { useSecureLocalStorage } from '@/hooks/useSecureLocalStorage';
 import { supabase } from '@/integrations/supabase/client';
+import { sessionManager } from '@/lib/security';
 import { Loan } from '@/types/finance';
 
 export interface Transaction {
@@ -121,8 +122,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [creditCards, setCreditCards] = React.useState<any[]>([]);
   const [loans, setLoans] = React.useState<Loan[]>([]);
   
-  const { value: persistedTransactions, setValue: setPersistedTransactions } = 
-    useLocalStorageWithErrorRecovery<Transaction[]>('finance-transactions', [], {
+  const [persistedTransactions, setPersistedTransactions, , transactionError] = 
+    useSecureLocalStorage<Transaction[]>('finance-transactions', [], {
+      encrypt: true,
       validateData: (data): data is Transaction[] => 
         Array.isArray(data) && data.every(item => 
           typeof item === 'object' && 
@@ -132,7 +134,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           typeof item.category === 'string' &&
           typeof item.description === 'string' &&
           typeof item.date === 'string'
-        )
+        ),
+      onError: (error, key) => {
+        console.error(`Secure storage error for ${key}:`, error);
+      }
     });
 
   // Load data from localStorage and set up realtime listeners
@@ -140,6 +145,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadAllData = async () => {
       console.log('Loading all data from localStorage and Supabase...');
       
+      // Update session activity
+      sessionManager.setLastActivity();
+
       // Load loans
       try {
         const savedLoans = localStorage.getItem('loans');
@@ -393,6 +401,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [state.transactions, setPersistedTransactions]);
 
   const addTransaction = useCallback((transaction: Omit<Transaction, 'id' | 'createdAt'>) => {
+    // Update session activity on user actions
+    sessionManager.setLastActivity();
+    
     const newTransaction: Transaction = {
       ...transaction,
       id: crypto.randomUUID(),
@@ -402,10 +413,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const updateTransaction = useCallback((transaction: Transaction) => {
+    // Update session activity on user actions
+    sessionManager.setLastActivity();
     dispatch({ type: 'UPDATE_TRANSACTION', payload: transaction });
   }, []);
 
   const deleteTransaction = useCallback((id: string) => {
+    // Update session activity on user actions
+    sessionManager.setLastActivity();
     dispatch({ type: 'DELETE_TRANSACTION', payload: id });
   }, []);
 

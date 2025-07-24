@@ -8,11 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, DollarSign } from 'lucide-react';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { emailSchema, passwordSchema } from '@/lib/validations';
+import { authRateLimiter, cleanupAuthState, csrfProtection, sessionManager } from '@/lib/security';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -24,11 +30,69 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Generate CSRF token on mount
+  useEffect(() => {
+    const token = csrfProtection.generateToken();
+    csrfProtection.setToken(token);
+  }, []);
+
+  const validateInputs = (): boolean => {
+    let isValid = true;
+    
+    // Email validation
+    try {
+      emailSchema.parse(email);
+      setEmailError('');
+    } catch (error: any) {
+      setEmailError(error.errors?.[0]?.message || 'Invalid email');
+      isValid = false;
+    }
+    
+    // Password validation
+    try {
+      passwordSchema.parse(password);
+      setPasswordError('');
+    } catch (error: any) {
+      setPasswordError(error.errors?.[0]?.message || 'Invalid password');
+      isValid = false;
+    }
+    
+    return isValid;
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!validateInputs()) {
+      return;
+    }
+
+    // Check rate limiting
+    const userIdentifier = email;
+    if (!authRateLimiter.isAllowed(userIdentifier)) {
+      const remainingTime = Math.ceil(authRateLimiter.getRemainingTime(userIdentifier) / 1000 / 60);
+      toast({
+        title: "Too many attempts",
+        description: `Please try again in ${remainingTime} minutes.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Clean up existing state before signing in
+      cleanupAuthState();
+      
+      // Attempt global sign out to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+
       const { error } = await signIn(email, password);
       
       if (error) {
@@ -38,11 +102,19 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        // Reset rate limiter on successful login
+        authRateLimiter.reset(userIdentifier);
+        
+        // Set session activity
+        sessionManager.setLastActivity();
+        
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        navigate('/');
+        
+        // Force page reload for clean state
+        window.location.href = '/';
       }
     } catch (error) {
       toast({
@@ -57,9 +129,30 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!validateInputs()) {
+      return;
+    }
+
+    // Check rate limiting
+    const userIdentifier = email;
+    if (!authRateLimiter.isAllowed(userIdentifier)) {
+      const remainingTime = Math.ceil(authRateLimiter.getRemainingTime(userIdentifier) / 1000 / 60);
+      toast({
+        title: "Too many attempts",
+        description: `Please try again in ${remainingTime} minutes.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Clean up existing state before signing up
+      cleanupAuthState();
+      
       const { error } = await signUp(email, password);
       
       if (error) {
@@ -77,6 +170,9 @@ const Auth = () => {
           });
         }
       } else {
+        // Reset rate limiter on successful signup
+        authRateLimiter.reset(userIdentifier);
+        
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account.",
@@ -124,9 +220,16 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError('');
+                      }}
                       required
+                      className={emailError ? 'border-destructive' : ''}
                     />
+                    {emailError && (
+                      <p className="text-sm text-destructive">{emailError}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
@@ -135,9 +238,16 @@ const Auth = () => {
                       type="password"
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError('');
+                      }}
                       required
+                      className={passwordError ? 'border-destructive' : ''}
                     />
+                    {passwordError && (
+                      <p className="text-sm text-destructive">{passwordError}</p>
+                    )}
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -155,21 +265,35 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError('');
+                      }}
                       required
+                      className={emailError ? 'border-destructive' : ''}
                     />
+                    {emailError && (
+                      <p className="text-sm text-destructive">{emailError}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Create a password"
+                      placeholder="Create a strong password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError('');
+                      }}
                       required
-                      minLength={6}
+                      className={passwordError ? 'border-destructive' : ''}
                     />
+                    {passwordError && (
+                      <p className="text-sm text-destructive">{passwordError}</p>
+                    )}
+                    <PasswordStrengthIndicator password={password} />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

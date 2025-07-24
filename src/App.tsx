@@ -8,6 +8,7 @@ import { FinanceProvider } from "@/contexts/FinanceContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { SessionTimeoutWarning } from "@/components/SessionTimeoutWarning";
 import Index from "./pages/Index";
 import Income from "./pages/Income";
 import Expenses from "./pages/Expenses";
@@ -34,6 +35,7 @@ const App = () => (
             <TooltipProvider>
           <Toaster />
           <Sonner />
+          <SessionTimeoutWarning />
           <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
