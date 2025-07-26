@@ -86,7 +86,7 @@ const Income = () => {
       const multiplier = income.frequency === 'weekly' ? 4.33 
         : income.frequency === 'monthly' ? 1 
         : income.frequency === 'yearly' ? 1/12 
-        : income.frequency === 'quarterly' ? 4
+        : income.frequency === 'quarterly' ? 1/3
         : income.frequency === 'bi-weekly' ? 2.17
         : income.frequency === 'one-time' ? 0
         : 1;
